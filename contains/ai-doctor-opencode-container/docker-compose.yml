@@ -1,0 +1,24 @@
+services:
+  opencode:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-doctor-opencode
+    ports:
+      - "4097:4096"
+    volumes:
+      - ./data/notes:/home/aiuser/Codes/ai-doctor-opencode/notes
+      - ./data/home/.cache/opencode:/home/aiuser/.cache/opencode
+      - ./data/home/.config/opencode:/home/aiuser/.config/opencode
+      - ./data/home/.local/share/opencode:/home/aiuser/.local/share/opencode
+      - ./data/home/.local/state/opencode:/home/aiuser/.local/state/opencode
+    working_dir: /home/aiuser/Codes
+    restart: on-failure:5
+    command: >
+      bash -c "
+      cd /home/aiuser/Codes/ai-doctor-opencode &&
+      git pull origin main &&
+      mkdir -p notes &&
+      /home/aiuser/.opencode/bin/opencode_new web --hostname 0.0.0.0 --port 4096 --unmatched-request-proxy http://localhost:4173 &
+      serve -s /home/aiuser/Codes/opencode-web -l 4173
+      "

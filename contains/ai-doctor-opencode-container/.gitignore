@@ -1,0 +1,23 @@
+# Sisyphus work directory
+/.sisyphus
+
+# Ignore all files in data directory
+/data/*
+
+# But preserve directory structure with .gitkeep files
+!/data/notes/.gitkeep
+!/data/home/.cache/opencode/.gitkeep
+!/data/home/.config/opencode/.gitkeep
+!/data/home/.local/share/opencode/.gitkeep
+!/data/home/.local/state/opencode/.gitkeep
+
+# Local notes directory (legacy)
+/notes
+
+# macOS extended attributes
+._*
+.DS_Store
+
+# Backup files
+*~
+*.bak

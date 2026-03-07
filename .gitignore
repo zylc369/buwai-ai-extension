@@ -34,3 +34,7 @@ oauth-success.html
 
 # Extension installation record
 .extension-install
+
+# Backup files
+*~
+*.bak
