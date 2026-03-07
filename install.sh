@@ -70,7 +70,7 @@ add_extension_metadata() {
         return 0
     fi
 
-    if ! has_frontmatter "$file"; then
+    if ! has_frontmatter "$file"); then
         local tmp_file=$(mktemp)
         echo "---" > "$tmp_file"
         echo "extension-id: $ext_id" >> "$tmp_file"
@@ -157,7 +157,10 @@ copy_extension_files() {
 
     info_msg "Copying command files..."
     while IFS= read -r src_file; do
-        [[ "$src_file" != *"assets"* ]] || continue
+        # Skip .gitkeep files
+        [[ "$src_file" == *".gitkeep"* ]] && continue
+        # Skip assets folders
+        [[ "$src_file" == *"assets"* ]] && continue
         
         local filename=$(basename "$src_file")
         local dest_file="$commands_dir/$filename"
@@ -180,6 +183,9 @@ copy_extension_files() {
 
     info_msg "Copying skill files..."
     while IFS= read -r src_file; do
+        # Skip .gitkeep files
+        [[ "$src_file" == *".gitkeep"* ]] && continue
+        
         local filename=$(basename "$src_file")
         local dest_file="$skills_dir/$filename"
         
@@ -316,7 +322,7 @@ main() {
     copied_count=$(copy_extension_files "$opencode_dir" "$extension_id")
 
     # Create installation record
-    create_install_record "$extension_id" "$opencode_dir" "$copied_count"
+    create_install_record "$extension_id" "$opencode_dir" "$copied_count")
 
     # Display summary
     display_install_summary "$extension_id" "$opencode_dir" "$copied_count" "$copied_count"
