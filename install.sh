@@ -40,21 +40,25 @@ has_frontmatter() {
 has_extension_metadata() {
     local file="$1"
     local ext_id="$2"
-    grep -q "^extension: $ext_id" "$file" 2>/dev/null
+    # Check for extension-id in the file
+    grep -q "^extension-id: $ext_id" "$file" 2>/dev/null
 }
 
 add_extension_metadata() {
     local file="$1"
     local ext_id="$2"
 
+    # Skip if already has metadata
     if has_extension_metadata "$file" "$ext_id"; then
         return 0
     fi
 
+    # Check if file has frontmatter
     if ! has_frontmatter "$file"; then
+        # No frontmatter, add it
         local tmp_file=$(mktemp)
         echo "---" > "$tmp_file"
-        echo "extension: $ext_id" >> "$tmp_file"
+        echo "extension-id: $ext_id" >> "$tmp_file"
         echo "---" >> "$tmp_file"
         echo "" >> "$tmp_file"
         cat "$file" >> "$tmp_file"
@@ -62,9 +66,11 @@ add_extension_metadata() {
         return 0
     fi
 
+    # Has frontmatter, find the first closing ---
     local tmp_file=$(mktemp)
     local frontmatter_closed=false
     local line_num=0
+    local first_delimiter_found=false
 
     while IFS= read -r line || [[ -n "$line" ]]; do
         line_num=$((line_num + 1))
@@ -75,10 +81,14 @@ add_extension_metadata() {
         fi
 
         if [[ "$line" == "---" ]]; then
-            echo "extension: $ext_id" >> "$tmp_file"
-            echo "$line" >> "$tmp_file"
-            frontmatter_closed=true
-            continue
+            if [ "$first_delimiter_found" = false ]; then
+                # This is the closing ---, add extension-id before it
+                echo "extension-id: $ext_id" >> "$tmp_file"
+                echo "$line" >> "$tmp_file"
+                first_delimiter_found=true
+                frontmatter_closed=true
+                continue
+            fi
         fi
 
         echo "$line" >> "$tmp_file"
@@ -92,7 +102,9 @@ add_extension_metadata() {
 }
 
 find_extension_files() {
+    # Find command files (excluding assets)
     find "$COMMANDS_DIR" -type f -name "*.md" 2>/dev/null | grep -v "assets"
+    # Find skill files
     find "$SKILLS_DIR" -type f -name "*.md" 2>/dev/null
 }
 
@@ -109,6 +121,7 @@ validate_extension() {
         error_exit "Skills directory not found: $SKILLS_DIR"
     fi
 
+    # Check if there are any files
     local file_count=$(find "$COMMANDS_DIR" "$SKILLS_DIR" -type f -name "*.md" 2>/dev/null | grep -v "assets" | wc -l)
 
     if [ "$file_count" -eq 0 ]; then
@@ -134,7 +147,7 @@ display_summary() {
     echo "  Total files: $total_files"
     echo "  Updated files: $updated_files"
     echo ""
-    echo "Metadata 'extension: $ext_id' has been added to all extension files."
+    echo "Metadata 'extension-id: $ext_id' has been added to all extension files."
     echo ""
     echo "To uninstall this extension, run:"
     echo "  ./uninstall.sh --extension-id $ext_id"

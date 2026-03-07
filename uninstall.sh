@@ -34,7 +34,8 @@ info_msg() {
 has_extension_metadata() {
     local file="$1"
     local ext_id="$2"
-    grep -q "^extension: $ext_id" "$file" 2>/dev/null
+    # Check for extension-id in the file
+    grep -q "^extension-id: $ext_id" "$file" 2>/dev/null
 }
 
 find_assets_folder() {
@@ -222,7 +223,7 @@ main() {
                 echo ""
                 echo "Description:"
                 echo "  Removes extension files by scanning for metadata tags."
-                echo "  Files with matching 'extension: <id>' metadata and their"
+                echo "  Files with matching 'extension-id: <id>' metadata and their"
                 echo "  associated assets folders will be removed."
                 echo ""
                 echo "Examples:"
