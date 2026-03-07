@@ -162,10 +162,14 @@ copy_extension_files() {
         [[ "$src_file" == *"assets"* ]] && continue
         
         local filename=$(basename "$src_file")
+        local filename_no_ext="${filename%.md}"
         local dest_file="$commands_dir/$filename"
         
+        # Add metadata to source file first (using filename without extension as ID)
+        add_extension_metadata "$src_file" "$filename_no_ext"
+        
+        # Then copy to destination
         cp "$src_file" "$dest_file"
-        add_extension_metadata "$dest_file" "$ext_id"
         echo "  [DONE] $filename"
         copied_files=$((copied_files + 1))
         
@@ -186,10 +190,14 @@ copy_extension_files() {
         [[ "$src_file" == *".gitkeep"* ]] && continue
         
         local filename=$(basename "$src_file")
+        local filename_no_ext="${filename%.md}"
         local dest_file="$skills_dir/$filename"
         
+        # Add metadata to source file first (using filename without extension as ID)
+        add_extension_metadata "$src_file" "$filename_no_ext"
+        
+        # Then copy to destination
         cp "$src_file" "$dest_file"
-        add_extension_metadata "$dest_file" "$ext_id"
         echo "  [DONE] $filename"
         copied_files=$((copied_files + 1))
         

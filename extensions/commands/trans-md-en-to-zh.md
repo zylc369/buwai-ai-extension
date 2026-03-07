@@ -1,6 +1,6 @@
 ---
 description: Translate English markdown documents to Chinese
-buwai-extension-id: buwai-ai-extension
+buwai-extension-id: trans-md-en-to-zh
 ---
 
 # Translate English Markdown to Chinese

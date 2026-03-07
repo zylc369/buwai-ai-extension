@@ -1,5 +1,6 @@
 ---
 description: "Start Dr. Ralph full diagnostic workflow"
+buwai-extension-id: dr-diagnose
 ---
 
 # Dr. Ralph Diagnose Command
