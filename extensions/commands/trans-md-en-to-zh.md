@@ -1,62 +1,82 @@
 ---
-description: Translate English markdown documents into Chinese
+name: translate-md-en-to-zh
+description: Translate English markdown documents to Chinese
 ---
 
-## 关键: 请求参数
+# Translate English Markdown to Chinese
 
-**参数说明：**
-- `第一个参数`: Markdown文档路径或Markdown文档所在的目录路径。
-    - 如果路径是文档，如果是英文文档那么翻译到中文，否则提示**这个文档不是英文文档，无法翻译**然后结束执行。
-    - 如果路径是目录，那么翻译这个目录下的所有**英文Markdown**文档到中文。
-- `第二个参数`: 执行模式，非必传，默认值是**trans**。参数值解释
-    - **trans**: 翻译英文Markdown文档到中文。
-    - **verify**: 验证英文文档翻译到中文文档的结果，验证翻译内容是否精确、翻译用词是否合适，修复翻译后的中文文档中有问题的地方。
-- `第三个参数`: 一个布尔值，非必传，默认值是**true**。如果`第一个参数`是不是目录，那么忽略这个参数，否则`第三个参数`决定是否要翻译这个目录及其所有子目录下面的所有文档。参数值解释：
-    - **true**: 要翻译`第一个参数`指定的目录及其所有子目录下面的所有文档。默认值。
-    - **false**: 只翻译`第一个参数`指定的目录下面的文档。
+Translate English markdown files to Chinese with proper handling of internal links and formatting preservation.
 
-**重要：**翻译后的文档添加`.zh-cn.md`后缀，其中`md`是文档扩展名。
+## Usage
 
-
-## 关键: 翻译完成后的动作
-
-如果`第一个参数`是一个目录路径，再执行这个动作。在目录下生成一个新的MarkDown文档，这个文档记录下列内容：
-1. 翻译时本地代码的最新的git提交id，它用于下次翻译的时候判断哪些文件有改变，只翻译有改变的文件。
-2. 当前目录下翻译了哪些文档以及翻译前后文件之间的映射关系，以及翻译完成时间，文档的映射关系添加上链接方便直接点击访问。
-3. 翻译完成时间，时间精确到秒。
-
-
-**文件格式：**
-```markdown
-# translation-en-to-zh命令执行记录
-
-## Git commit id
-[Git commit id]
-
-
-## 翻译文档映射关系
-1. [英文文档链接] -> [中文文档链接]。翻译时间：[年/月/日 时/分/秒]
-2. ......
-
-
-## 翻译完成时间
-[年/月/日 时/分/秒]
+### Single file translation
+```
+/translate-md-en-to-zh README.md
 ```
 
-**重要**：文件命名为**translation-en-to-zh-record.md**。
+### Directory translation
+```
+/translate-md-en-to-zh docs/
+```
 
+### With verification mode
+```
+/translate-md-en-to-zh docs/ verify
+```
 
-## 翻译执行规则
+### Non-recursive directory translation
+```
+/translate-md-en-to-zh docs/ trans false
+```
 
-1. 当`第一个参数`是一个文件路径，直接翻译。翻译完成后如果当前目录下有**translation-en-to-zh-record.md**文件，执行**关键: 翻译完成后的动作**这一节中的第2步和第3步。
-2. 当`第一个参数`是一个目录路径，判断目录下是否存在**translation-en-to-zh-record.md**文件：
-    1. 如果存在：做增量翻译。获取仓库当前的**Git commit id**，从文档中提取出**Git commit id**，如果它们相同，则不继续执行并提示“当前翻译结果是最新的，如果需要验证翻译结果请传递"第二个参数"的值为verify”。如果不同，判断文档的**Git commit id**到仓库当前的**Git commit id**之间，这个目录下哪些MarkDown英文文档发生了变化，变化类型：
-        a. 新增MarkDown英文文档：翻译它。
-        b. 更新MarkDown英文文档：翻译它。
-        c. 删除MarkDown英文文档：删除对应的中文文档。
-    2. 如果不存在：根据**关键: 请求参数**中的描述执行翻译。
+## Parameters
 
-**重要**：
-1. 翻译内容务必精确、精准，不要发散原文档中不存在的内容。
-2. 翻译后的文档中，如果存在引用仓库中其他英文文档的链接，需要检查是否有对应的中文文档，如果有，则需要替换成对应的中文文档链接。
-3. 翻译完成后需要执行**关键: 翻译完成后的动作**。
+1. **Path** (required): File or directory path
+   - **File**: Translates single markdown file if it's in English
+   - **Directory**: Translates all English markdown files in that directory
+
+2. **Mode** (optional, default: `trans`):
+   - `trans`: Translate English to Chinese
+   - `verify`: Verify existing translations for accuracy and fix issues
+
+3. **Recursive** (optional, default: `true`):
+   - `true`: Translate directory and all subdirectories
+   - `false`: Translate only the specified directory (ignored for single files)
+
+## Output
+
+- Translated files use `.zh-cn.md` suffix
+- Example: `README.md` → `README.zh-cn.md`
+- Example: `docs/guide.md` → `docs/guide.zh-cn.md`
+
+## Translation Rules
+
+1. **Accuracy**: Translate precisely without adding content not present in the source
+2. **Link handling**: Check if linked English markdown files have Chinese versions, replace links accordingly
+3. **Formatting**: Preserve markdown structure, code blocks, and syntax
+4. **Terminology**: Maintain consistent terminology throughout translations
+
+## Error Handling
+
+- If input file is not English markdown: Display error "This is not an English markdown document, cannot translate"
+- If directory contains no English markdown files: Report this clearly
+
+## Advanced Features
+
+### Link Replacement
+When translating, the command automatically detects links to other English markdown files:
+- If a Chinese version exists (`file.zh-cn.md`), replace the link
+- If no Chinese version exists, keep the original link
+
+### Verification Mode
+Use `verify` mode to review existing translations:
+- Check translation accuracy
+- Verify terminology consistency
+- Fix formatting issues
+- Update broken links
+
+---
+
+## Advanced Workflow (Git-based Incremental Translation)
+
+For production workflows with git-based incremental translation, translation record management, and change detection, see the [Translation Workflow Guide](./trans-md-en-to-zh-assets/translation-workflow.md).
