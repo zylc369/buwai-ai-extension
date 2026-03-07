@@ -28,8 +28,9 @@
 !/data/home/.local/state/opencode
 !/data/home/.local/state/opencode/.gitkeep
 
-# Local notes directory (legacy)
-/notes
+!/data/home/data
+!/data/home/data/ai-doctor-notes
+!/data/home/data/ai-doctor-notes/.gitkeep
 
 # macOS extended attributes
 ._*
