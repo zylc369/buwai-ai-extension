@@ -8,11 +8,30 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# Configuration
 CURRENT_DIR="$(pwd)"
-EXTENSIONS_DIR="$CURRENT_DIR/extensions"
+SOURCE_EXTENSIONS_DIR="$CURRENT_DIR/extensions"
 DEFAULT_EXTENSION_ID="buwai-ai-extension"
-COMMANDS_DIR="$EXTENSIONS_DIR/commands"
-SKILLS_DIR="$EXTENSIONS_DIR/skills"
+INSTALL_RECORD_FILE=".extension-install"
+
+# OpenCode installation directories
+POSSIBLE_OPENCODE_DIRS=(
+    "$HOME/.config/opencode"
+    "$HOME/.opencode"
+    "$HOME/.openclaw"
+    "$XDG_CONFIG_HOME/opencode"
+)
+
+# Function to find OpenCode directory
+find_opencode_dir() {
+    for dir in "${POSSIBLE_OPENCODE_DIRS[@]}"; do
+        if [ -d "$dir" ]; then
+            echo "$dir"
+            return 0
+        fi
+    done
+    echo ""
+}
 
 error_exit() {
     echo -e "${RED}Error: $1${NC}" >&2
@@ -40,7 +59,6 @@ has_frontmatter() {
 has_extension_metadata() {
     local file="$1"
     local ext_id="$2"
-    # Check for extension-id in the file
     grep -q "^extension-id: $ext_id" "$file" 2>/dev/null
 }
 
@@ -48,14 +66,11 @@ add_extension_metadata() {
     local file="$1"
     local ext_id="$2"
 
-    # Skip if already has metadata
     if has_extension_metadata "$file" "$ext_id"; then
         return 0
     fi
 
-    # Check if file has frontmatter
     if ! has_frontmatter "$file"; then
-        # No frontmatter, add it
         local tmp_file=$(mktemp)
         echo "---" > "$tmp_file"
         echo "extension-id: $ext_id" >> "$tmp_file"
@@ -66,7 +81,6 @@ add_extension_metadata() {
         return 0
     fi
 
-    # Has frontmatter, find the first closing ---
     local tmp_file=$(mktemp)
     local frontmatter_closed=false
     local line_num=0
@@ -82,7 +96,6 @@ add_extension_metadata() {
 
         if [[ "$line" == "---" ]]; then
             if [ "$first_delimiter_found" = false ]; then
-                # This is the closing ---, add extension-id before it
                 echo "extension-id: $ext_id" >> "$tmp_file"
                 echo "$line" >> "$tmp_file"
                 first_delimiter_found=true
@@ -101,40 +114,118 @@ add_extension_metadata() {
     mv "$tmp_file" "$file"
 }
 
-find_extension_files() {
-    # Find command files (excluding assets)
-    find "$COMMANDS_DIR" -type f -name "*.md" 2>/dev/null | grep -v "assets"
-    # Find skill files
-    find "$SKILLS_DIR" -type f -name "*.md" 2>/dev/null
-}
-
-validate_extension() {
-    if [ ! -d "$EXTENSIONS_DIR" ]; then
-        error_exit "Extensions directory not found: $EXTENSIONS_DIR"
+validate_source_extension() {
+    if [ ! -d "$SOURCE_EXTENSIONS_DIR" ]; then
+        error_exit "Extensions directory not found: $SOURCE_EXTENSIONS_DIR"
     fi
 
-    if [ ! -d "$COMMANDS_DIR" ]; then
-        error_exit "Commands directory not found: $COMMANDS_DIR"
-    fi
+    local command_count=$(find "$SOURCE_EXTENSIONS_DIR/commands" -type f -name "*.md" 2>/dev/null | grep -v "assets" | wc -l)
+    local skill_count=$(find "$SOURCE_EXTENSIONS_DIR/skills" -type f -name "*.md" 2>/dev/null | wc -l)
+    local total=$((command_count + skill_count))
 
-    if [ ! -d "$SKILLS_DIR" ]; then
-        error_exit "Skills directory not found: $SKILLS_DIR"
-    fi
-
-    # Check if there are any files
-    local file_count=$(find "$COMMANDS_DIR" "$SKILLS_DIR" -type f -name "*.md" 2>/dev/null | grep -v "assets" | wc -l)
-
-    if [ "$file_count" -eq 0 ]; then
+    if [ "$total" -eq 0 ]; then
         error_exit "No extension files found. Please add commands or skills."
     fi
 
-    success_msg "Extension structure validated: $file_count file(s) found"
+    success_msg "Source extension validated: $total file(s) found"
 }
 
-display_summary() {
+create_opencode_structure() {
+    local opencode_dir="$1"
+    
+    local commands_dir="$opencode_dir/commands"
+    local skills_dir="$opencode_dir/skills"
+
+    if [ ! -d "$commands_dir" ]; then
+        mkdir -p "$commands_dir"
+        info_msg "Created directory: $commands_dir"
+    fi
+
+    if [ ! -d "$skills_dir" ]; then
+        mkdir -p "$skills_dir"
+        info_msg "Created directory: $skills_dir"
+    fi
+}
+
+copy_extension_files() {
+    local opencode_dir="$1"
+    local ext_id="$2"
+    
+    local copied_files=0
+    local commands_dir="$opencode_dir/commands"
+    local skills_dir="$opencode_dir/skills"
+
+    info_msg "Copying command files..."
+    while IFS= read -r src_file; do
+        [[ "$src_file" != *"assets"* ]] || continue
+        
+        local filename=$(basename "$src_file")
+        local dest_file="$commands_dir/$filename"
+        
+        cp "$src_file" "$dest_file"
+        add_extension_metadata "$dest_file" "$ext_id"
+        echo "  [DONE] $filename"
+        copied_files=$((copied_files + 1))
+        
+        # Copy assets folder if exists
+        local src_dir=$(dirname "$src_file")
+        local src_assets="${src_dir}/${filename%.md}-assets"
+        if [ -d "$src_assets" ]; then
+            local dest_assets="$commands_dir/${filename%.md}-assets"
+            cp -r "$src_assets" "$dest_assets"
+            echo "  [DONE] ${filename%.md}-assets/"
+            copied_files=$((copied_files + 1))
+        fi
+    done < <(find "$SOURCE_EXTENSIONS_DIR/commands" -type f -name "*.md" 2>/dev/null)
+
+    info_msg "Copying skill files..."
+    while IFS= read -r src_file; do
+        local filename=$(basename "$src_file")
+        local dest_file="$skills_dir/$filename"
+        
+        cp "$src_file" "$dest_file"
+        add_extension_metadata "$dest_file" "$ext_id"
+        echo "  [DONE] $filename"
+        copied_files=$((copied_files + 1))
+        
+        # Copy assets folder if exists
+        local src_dir=$(dirname "$src_file")
+        local src_assets="${src_dir}/${filename%.md}-assets"
+        if [ -d "$src_assets" ]; then
+            local dest_assets="$skills_dir/${filename%.md}-assets"
+            cp -r "$src_assets" "$dest_assets"
+            echo "  [DONE] ${filename%.md}-assets/"
+            copied_files=$((copied_files + 1))
+        fi
+    done < <(find "$SOURCE_EXTENSIONS_DIR/skills" -type f -name "*.md" 2>/dev/null)
+
+    echo "$copied_files"
+}
+
+create_install_record() {
     local ext_id="$1"
-    local total_files="$2"
-    local updated_files="$3"
+    local opencode_dir="$2"
+    local file_count="$3"
+
+    cat > "$INSTALL_RECORD_FILE" <<EOF
+# Extension Installation Record
+# DO NOT DELETE - Used for uninstallation
+
+EXTENSION_ID="$ext_id"
+INSTALL_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+INSTALL_DIR="$opencode_dir"
+FILES_COUNT="$file_count"
+VERSION="1.0.0"
+EOF
+
+    success_msg "Installation record created: $INSTALL_RECORD_FILE"
+}
+
+display_install_summary() {
+    local ext_id="$1"
+    local opencode_dir="$2"
+    local file_count="$3"
+    local copied_count="$4"
 
     echo ""
     echo "========================================"
@@ -143,15 +234,14 @@ display_summary() {
     echo ""
     echo "Extension Information:"
     echo "  ID: $ext_id"
-    echo "  Location: $CURRENT_DIR"
-    echo "  Total files: $total_files"
-    echo "  Updated files: $updated_files"
-    echo ""
-    echo "Metadata 'extension-id: $ext_id' has been added to all extension files."
+    echo "  Source: $SOURCE_EXTENSIONS_DIR"
+    echo "  Installed to: $opencode_dir"
+    echo "  Files copied: $copied_count"
     echo ""
     echo "To uninstall this extension, run:"
+    echo "  ./uninstall.sh"
+    echo "  or:"
     echo "  ./uninstall.sh --extension-id $ext_id"
-    echo "  or simply: ./uninstall.sh"
     echo "========================================"
 }
 
@@ -176,13 +266,12 @@ main() {
                 echo ""
                 echo "Options:"
                 echo "  --extension-id <name>  Extension identifier (default: buwai-ai-extension)"
-                echo "  --verify-only          Only verify extension structure, don't add metadata"
+                echo "  --verify-only          Only verify, don't install"
                 echo "  --help, -h             Show this help message"
                 echo ""
                 echo "Description:"
-                echo "  Adds extension metadata to all extension files for identification."
-                echo "  This metadata is used during uninstallation to identify and remove"
-                echo "  files belonging to this extension."
+                echo "  Installs AI extension to OpenCode configuration directory."
+                echo "  Copies extension files and adds metadata for identification."
                 echo ""
                 echo "Examples:"
                 echo "  ./install.sh"
@@ -201,37 +290,36 @@ main() {
     echo "========================================"
     echo ""
 
-    validate_extension
+    validate_source_extension
 
     if [ "$verify_only" = true ]; then
-        info_msg "Verify-only mode: metadata not added"
-        display_summary "$extension_id" "0" "0"
+        info_msg "Verify-only mode: extension not installed"
+        display_install_summary "$extension_id" "<not installed>" "0" "0"
         return 0
     fi
 
-    info_msg "Scanning for extension files..."
-    local total_files=0
-    local updated_files=0
+    # Find OpenCode directory
+    local opencode_dir
+    opencode_dir=$(find_opencode_dir)
 
-    while IFS= read -r file; do
-        total_files=$((total_files + 1))
-        if has_extension_metadata "$file" "$extension_id"; then
-            echo "  [SKIP] $file (already has metadata)"
-        else
-            add_extension_metadata "$file" "$extension_id"
-            echo "  [DONE] $file"
-            updated_files=$((updated_files + 1))
-        fi
-    done < <(find_extension_files)
-
-    if [ "$total_files" -eq 0 ]; then
-        error_exit "No extension files found"
+    if [ -z "$opencode_dir" ]; then
+        error_exit "OpenCode configuration directory not found. Please ensure OpenCode is installed."
     fi
 
-    info_msg "Found $total_files extension file(s)"
-    success_msg "Extension metadata added to $updated_files file(s)"
+    success_msg "Found OpenCode directory: $opencode_dir"
 
-    display_summary "$extension_id" "$total_files" "$updated_files"
+    # Create OpenCode structure if needed
+    create_opencode_structure "$opencode_dir"
+
+    # Copy files and add metadata
+    local copied_count
+    copied_count=$(copy_extension_files "$opencode_dir" "$extension_id")
+
+    # Create installation record
+    create_install_record "$extension_id" "$opencode_dir" "$copied_count"
+
+    # Display summary
+    display_install_summary "$extension_id" "$opencode_dir" "$copied_count" "$copied_count"
 }
 
 main "$@"
