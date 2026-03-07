@@ -70,7 +70,7 @@ find_extensions_in_dir() {
         done < <(find "$skills_dir" -type f -name "*.md" 2>/dev/null)
     fi
 
-    echo "${files[@]}"
+    printf '%s\n' "${files[@]}"
 }
 
 list_extensions_in_dir() {
@@ -79,12 +79,14 @@ list_extensions_in_dir() {
     
     local files=()
     local folders=()
+    local raw_files=()
 
     # Get all files
-    local all_files
-    all_files=$(find_extensions_in_dir "$opencode_dir" "$ext_id")
+    while IFS= read -r file; do
+        [ -n "$file" ] && raw_files+=("$file")
+    done < <(find_extensions_in_dir "$opencode_dir" "$ext_id")
 
-    for file in "${all_files[@]}"; do
+    for file in "${raw_files[@]}"; do
         local has_metadata=false
         if [ -n "$ext_id" ]; then
             has_metadata=$(grep -q "^extension-id: $ext_id" "$file" 2>/dev/null && echo "true" || echo "false")
@@ -126,12 +128,14 @@ remove_files() {
     local dry_run="$3"
     local files=()
     local folders=()
+    local raw_files=()
 
     # Get all files
-    local all_files
-    all_files=$(find_extensions_in_dir "$opencode_dir" "$ext_id")
+    while IFS= read -r file; do
+        [ -n "$file" ] && raw_files+=("$file")
+    done < <(find_extensions_in_dir "$opencode_dir" "$ext_id")
 
-    for file in "${all_files[@]}"; do
+    for file in "${raw_files[@]}"; do
         local has_metadata=false
         if [ -n "$ext_id" ]; then
             has_metadata=$(grep -q "^extension-id: $ext_id" "$file" 2>/dev/null && echo "true" || echo "false")
