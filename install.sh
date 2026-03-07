@@ -70,7 +70,7 @@ add_extension_metadata() {
         return 0
     fi
 
-    if ! has_frontmatter "$file"); then
+    if ! has_frontmatter "$file"; then
         local tmp_file=$(mktemp)
         echo "---" > "$tmp_file"
         echo "extension-id: $ext_id" >> "$tmp_file"
@@ -322,7 +322,7 @@ main() {
     copied_count=$(copy_extension_files "$opencode_dir" "$extension_id")
 
     # Create installation record
-    create_install_record "$extension_id" "$opencode_dir" "$copied_count")
+    create_install_record "$extension_id" "$opencode_dir" "$copied_count"
 
     # Display summary
     display_install_summary "$extension_id" "$opencode_dir" "$copied_count" "$copied_count"
