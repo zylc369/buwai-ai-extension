@@ -241,7 +241,7 @@ main() {
 
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --extension-id)
+            --extension-id|-i)
                 extension_id="$2"
                 shift 2
                 ;;
@@ -249,7 +249,7 @@ main() {
                 dry_run=true
                 shift
                 ;;
-            --force)
+            --force|-f)
                 force=true
                 shift
                 ;;
