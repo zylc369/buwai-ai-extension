@@ -215,6 +215,29 @@ copy_extension_files() {
     echo "$copied_files"
 }
 
+# Run AI tools initialization script
+run_ai_tools_init() {
+    local script_path="$CURRENT_DIR/init-ai-tools.sh"
+    
+    if [ ! -f "$script_path" ]; then
+        warning_msg "AI tools init script not found: $script_path"
+        return 1
+    fi
+    
+    info_msg "Running AI tools initialization..."
+    echo ""
+    
+    if bash "$script_path"; then
+        echo ""
+        success_msg "AI tools initialization completed successfully"
+        return 0
+    else
+        local exit_code=$?
+        echo ""
+        warning_msg "AI tools initialization failed (exit code: $exit_code)"
+        return 1
+    fi
+}
 
 
 display_install_summary() {
@@ -311,7 +334,8 @@ main() {
     local copied_count
     copied_count=$(copy_extension_files "$opencode_dir" "$extension_id")
 
-    # Display summary
+    # Run AI tools initialization
+    run_ai_tools_init
 
     # Display summary
     display_install_summary "$extension_id" "$opencode_dir" "$copied_count" "$copied_count"
