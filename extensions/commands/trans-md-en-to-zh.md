@@ -1,5 +1,4 @@
 ---
-name: translate-md-en-to-zh
 description: Translate English markdown documents to Chinese
 ---
 
@@ -58,8 +57,8 @@ Translate English markdown files to Chinese with proper handling of internal lin
 
 ## Error Handling
 
-- If input file is not English markdown: Display error "This is not an English markdown document, cannot translate"
-- If directory contains no English markdown files: Report this clearly
+- If input file is not English markdown: Display error "This is not an English markdown document, cannot translate!"
+- If directory contains no English markdown files: Display error "There are no English documents in this directory!"
 
 ## Advanced Features
 
