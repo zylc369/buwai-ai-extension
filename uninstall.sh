@@ -1,102 +1,147 @@
 #!/bin/bash
 
-################################################################################
-# AI Extension Uninstaller
-#
-# Description: Uninstalls AI extensions safely using extension ID verification
-# Usage: ./uninstall.sh [--id <extension-id>] [--force]
-#
-# Options:
-#   --id <extension-id>    Extension ID to uninstall (optional, auto-detected if not provided)
-#   --force               Skip confirmation prompt
-#
-################################################################################
+set -e
 
-set -e  # Exit on error
-
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Configuration
 CURRENT_DIR="$(pwd)"
-EXTENSION_ID_FILE=".extension-id"
-INSTALL_LOG_FILE=".install.log"
+EXTENSIONS_DIR="$CURRENT_DIR/extensions"
+COMMANDS_DIR="$EXTENSIONS_DIR/commands"
+SKILLS_DIR="$EXTENSIONS_DIR/skills"
+DEFAULT_EXTENSION_ID="buwai-ai-extension"
 
-# Function to print error and exit
 error_exit() {
     echo -e "${RED}Error: $1${NC}" >&2
     exit 1
 }
 
-# Function to print success message
 success_msg() {
     echo -e "${GREEN}✓ $1${NC}"
 }
 
-# Function to print warning message
 warning_msg() {
     echo -e "${YELLOW}⚠ $1${NC}"
 }
 
-# Function to print info message
 info_msg() {
     echo -e "${BLUE}ℹ $1${NC}"
 }
 
-# Function to read extension ID
-read_extension_id() {
-    if [ ! -f "$EXTENSION_ID_FILE" ]; then
-        error_exit "Extension ID file not found: $EXTENSION_ID_FILE"
-    fi
-
-    # Source the extension ID file
-    source "$EXTENSION_ID_FILE"
-
-    if [ -z "$EXTENSION_ID" ]; then
-        error_exit "Extension ID not found in $EXTENSION_ID_FILE"
-    fi
-
-    echo "$EXTENSION_ID"
+has_extension_metadata() {
+    local file="$1"
+    local ext_id="$2"
+    grep -q "^extension: $ext_id" "$file" 2>/dev/null
 }
 
-# Function to verify extension ID
-verify_extension_id() {
-    local provided_id="$1"
-    local detected_id="$2"
+find_assets_folder() {
+    local file="$1"
+    local filename=$(basename "$file" .md)
+    local assets_folder="${file%/*}/${filename}-assets"
 
-    if [ -z "$provided_id" ]; then
-        # No ID provided, use detected ID
-        success_msg "Using detected extension ID: $detected_id"
-        echo "$detected_id"
-        return 0
-    fi
-
-    if [ "$provided_id" = "$detected_id" ]; then
-        success_msg "Extension ID verified: $detected_id"
-        echo "$detected_id"
-        return 0
-    else
-        error_exit "Extension ID mismatch!\n  Provided: $provided_id\n  Detected: $detected_id"
+    if [ -d "$assets_folder" ]; then
+        echo "$assets_folder"
     fi
 }
 
-# Function to display extension info
-display_extension_info() {
-    echo ""
-    echo "Extension Information:"
-    echo "  ID: $EXTENSION_ID"
-    echo "  Project: $PROJECT_NAME"
-    echo "  Install Date: $INSTALL_DATE"
-    echo "  Version: $VERSION"
-    echo "  Location: $INSTALL_DIR"
-    echo ""
+list_files_to_remove() {
+    local ext_id="$1"
+    local files=()
+    local folders=()
+
+    while IFS= read -r file; do
+        [[ "$file" != *"-assets"* ]] && files+=("$file")
+    done < <(find "$COMMANDS_DIR" -type f -name "*.md" 2>/dev/null)
+
+    while IFS= read -r file; do
+        files+=("$file")
+    done < <(find "$SKILLS_DIR" -type f -name "*.md" 2>/dev/null)
+
+    local filtered_files=()
+    for file in "${files[@]}"; do
+        if has_extension_metadata "$file" "$ext_id"; then
+            filtered_files+=("$file")
+        fi
+    done
+
+    local unique_folders=()
+    for file in "${filtered_files[@]}"; do
+        local assets=$(find_assets_folder "$file")
+        if [ -n "$assets" ]; then
+            if [[ ! " ${unique_folders[@]} " =~ " ${assets} " ]]; then
+                unique_folders+=("$assets")
+            fi
+        fi
+    done
+
+    echo "FILES:"
+    for file in "${filtered_files[@]}"; do
+        echo "  $file"
+    done
+
+    echo "FOLDERS:"
+    for folder in "${unique_folders[@]}"; do
+        echo "  $folder"
+    done
+
+    echo "COUNTS:${#filtered_files[@]}:${#unique_folders[@]}"
 }
 
-# Function to confirm uninstallation
+remove_files() {
+    local ext_id="$1"
+    local dry_run="$2"
+    local files=()
+    local folders=()
+
+    while IFS= read -r file; do
+        [[ "$file" != *"-assets"* ]] && files+=("$file")
+    done < <(find "$COMMANDS_DIR" -type f -name "*.md" 2>/dev/null)
+
+    while IFS= read -r file; do
+        files+=("$file")
+    done < <(find "$SKILLS_DIR" -type f -name "*.md" 2>/dev/null)
+
+    local filtered_files=()
+    for file in "${files[@]}"; do
+        if has_extension_metadata "$file" "$ext_id"; then
+            filtered_files+=("$file")
+        fi
+    done
+
+    local unique_folders=()
+    for file in "${filtered_files[@]}"; do
+        local assets=$(find_assets_folder "$file")
+        if [ -n "$assets" ]; then
+            if [[ ! " ${unique_folders[@]} " =~ " ${assets} " ]]; then
+                unique_folders+=("$assets")
+            fi
+        fi
+    done
+
+    for folder in "${unique_folders[@]}"; do
+        if [ "$dry_run" = false ]; then
+            rm -rf "$folder"
+            success_msg "Removed folder: $folder"
+        else
+            info_msg "Would remove folder: $folder"
+        fi
+    done
+
+    for file in "${filtered_files[@]}"; do
+        if [ "$dry_run" = false ]; then
+            rm -f "$file"
+            success_msg "Removed file: $file"
+        else
+            info_msg "Would remove file: $file"
+        fi
+    done
+
+    echo "${#filtered_files[@]}:${#unique_folders[@]}"
+}
+
 confirm_uninstall() {
     local force="$1"
 
@@ -116,124 +161,75 @@ confirm_uninstall() {
     fi
 }
 
-# Function to remove extension files
-remove_extension_files() {
-    info_msg "Removing extension identification files..."
-
-    # Remove extension ID file
-    if [ -f "$EXTENSION_ID_FILE" ]; then
-        rm -f "$EXTENSION_ID_FILE"
-        success_msg "Removed: $EXTENSION_ID_FILE"
-    fi
-
-    # Remove install log file
-    if [ -f "$INSTALL_LOG_FILE" ]; then
-        rm -f "$INSTALL_LOG_FILE"
-        success_msg "Removed: $INSTALL_LOG_FILE"
-    fi
-
-    # Note: We do NOT remove the extensions/ directory as it contains the actual extension content
-    warning_msg "Note: The extensions/ directory is preserved as it contains the actual extension content."
-    warning_msg "Note: The current directory structure is preserved for safety."
-}
-
-# Function to check for external references
-check_external_references() {
-    info_msg "Checking for external file references..."
-
-    local external_files=()
-
-    # Check install log for external target directory
-    if [ -f "$INSTALL_LOG_FILE" ]; then
-        source "$INSTALL_LOG_FILE"
-        if [ -n "$TARGET_DIR" ] && [[ ! "$TARGET_DIR" == "$CURRENT_DIR"* ]]; then
-            external_files+=("$TARGET_DIR")
-        fi
-    fi
-
-    if [ ${#external_files[@]} -gt 0 ]; then
-        echo ""
-        warning_msg "This extension was installed to external directories:"
-        for file in "${external_files[@]}"; do
-            echo "  - $file"
-        done
-        echo ""
-        read -p "Do you want to remove these external files? (yes/no): " -r
-        echo
-        if [[ $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
-            for file in "${external_files[@]}"; do
-                if [ -e "$file" ]; then
-                    warning_msg "Removing external reference: $file"
-                    rm -rf "$file"
-                    success_msg "Removed: $file"
-                else
-                    warning_msg "External file not found: $file"
-                fi
-            done
-        else
-            warning_msg "External files preserved. You may need to remove them manually."
-        fi
-    fi
-}
-
-# Function to display completion message
 display_completion() {
+    local ext_id="$1"
+    local file_count="$2"
+    local folder_count="$3"
+    local dry_run="$4"
+
     echo ""
     echo "========================================"
-    echo "Uninstallation Complete!"
+    if [ "$dry_run" = true ]; then
+        echo "Dry Run Complete!"
+    else
+        echo "Uninstallation Complete!"
+    fi
     echo "========================================"
     echo ""
-    echo "Extension $EXTENSION_ID has been uninstalled."
+    echo "Extension: $ext_id"
+    echo "Files removed: $file_count"
+    echo "Folders removed: $folder_count"
     echo ""
-    echo "Removed files:"
-    echo "  - $EXTENSION_ID_FILE"
-    echo "  - $INSTALL_LOG_FILE"
-    echo ""
-    echo "Preserved files:"
-    echo "  - extensions/ (contains your actual extension content)"
-    echo ""
-    echo "Note: The current directory still exists for safety."
-    echo "You can remove it manually if needed:"
-    echo "  cd .. && rm -rf $CURRENT_DIR"
+
+    if [ "$dry_run" = false ]; then
+        echo "All files and folders have been removed."
+    else
+        echo "No files were removed (dry run mode)."
+        echo "To actually remove, run without --dry-run flag."
+    fi
     echo "========================================"
 }
 
-# Main uninstallation process
 main() {
-    local provided_id=""
+    local extension_id="$DEFAULT_EXTENSION_ID"
+    local dry_run=false
     local force=false
 
-    # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --id)
-                provided_id="$2"
+            --extension-id)
+                extension_id="$2"
                 shift 2
+                ;;
+            --dry-run)
+                dry_run=true
+                shift
                 ;;
             --force)
                 force=true
                 shift
                 ;;
             --help|-h)
-                cat <<EOF
-AI Extension Uninstaller
-
-Usage: ./uninstall.sh [OPTIONS]
-
-Options:
-  --id <extension-id>      Extension ID to uninstall (optional, auto-detected if not provided)
-  --force                 Skip confirmation prompt
-  --help, -h              Show this help message
-
-Description:
-  Uninstalls the AI extension from the current directory.
-  Uses extension ID verification to prevent accidental uninstallation.
-
-Examples:
-  ./uninstall.sh
-  ./uninstall.sh --id buwai-ai-extension_20250307_123456_abc1
-  ./uninstall.sh --force
-EOF
+                echo "AI Extension Uninstaller"
+                echo ""
+                echo "Usage: ./uninstall.sh [OPTIONS]"
+                echo ""
+                echo "Options:"
+                echo "  --extension-id <name>  Extension identifier (default: buwai-ai-extension)"
+                echo "  --dry-run              Show what would be removed without removing"
+                echo "  --force                Skip confirmation prompt"
+                echo "  --help, -h             Show this help message"
+                echo ""
+                echo "Description:"
+                echo "  Removes extension files by scanning for metadata tags."
+                echo "  Files with matching 'extension: <id>' metadata and their"
+                echo "  associated assets folders will be removed."
+                echo ""
+                echo "Examples:"
+                echo "  ./uninstall.sh"
+                echo "  ./uninstall.sh --extension-id my-extension"
+                echo "  ./uninstall.sh --dry-run"
+                echo "  ./uninstall.sh --force"
                 exit 0
                 ;;
             *)
@@ -246,33 +242,49 @@ EOF
     echo "AI Extension Uninstaller"
     echo "========================================"
     echo ""
+    echo "Extension ID: $extension_id"
+    echo ""
 
-    # Read extension ID from file
-    local detected_id
-    detected_id=$(read_extension_id)
+    info_msg "Scanning for extension files..."
+    local output
+    output=$(list_files_to_remove "$extension_id")
 
-    # Verify extension ID
-    local extension_id
-    extension_id=$(verify_extension_id "$provided_id" "$detected_id")
+    local counts=$(echo "$output" | grep "^COUNTS:")
+    local file_count=$(echo "$counts" | cut -d: -f2)
+    local folder_count=$(echo "$counts" | cut -d: -f3)
 
-    # Re-source extension ID file to make variables available for display
-    source "$EXTENSION_ID_FILE"
+    if [ "$file_count" -eq 0 ]; then
+        warning_msg "No files found with extension ID: $extension_id"
+        echo ""
+        echo "Possible reasons:"
+        echo "  1. Extension was never installed (no metadata added)"
+        echo "  2. Extension ID is incorrect"
+        echo "  3. Files have been manually modified"
+        echo ""
+        exit 0
+    fi
 
-    # Display extension info
-    display_extension_info
+    echo ""
+    echo "Files and folders to be removed:"
+    echo "$output" | grep -v "^COUNTS:"
+    echo ""
 
-    # Check for external references
-    check_external_references
+    if [ "$dry_run" = true ]; then
+        info_msg "Dry run mode - no files will be removed"
+        display_completion "$extension_id" "$file_count" "$folder_count" true
+        exit 0
+    fi
 
-    # Confirm uninstallation
     confirm_uninstall "$force"
 
-    # Remove extension files
-    remove_extension_files
+    info_msg "Removing files and folders..."
+    local result
+    result=$(remove_files "$extension_id" false)
 
-    # Display completion message
-    display_completion
+    local removed_files=$(echo "$result" | cut -d: -f1)
+    local removed_folders=$(echo "$result" | cut -d: -f2)
+
+    display_completion "$extension_id" "$removed_files" "$removed_folders" false
 }
 
-# Run main function
 main "$@"

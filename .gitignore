@@ -19,9 +19,6 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
-# Extension installation files
-.extension-id
-.install.log
 
 # Lock files (use bun.lockb instead)
 package-lock.json
