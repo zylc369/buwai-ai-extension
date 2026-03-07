@@ -90,6 +90,8 @@ list_extensions_in_dir() {
         local has_metadata=false
         if [ -n "$ext_id" ]; then
             has_metadata=$(grep -q "^buwai-extension-id: $ext_id" "$file" 2>/dev/null && echo "true" || echo "false")
+        else
+            has_metadata=$(grep -q "^buwai-extension-id:" "$file" 2>/dev/null && echo "true" || echo "false")
         fi
         
         if [ "$has_metadata" = "true" ]; then
@@ -139,6 +141,8 @@ remove_files() {
         local has_metadata=false
         if [ -n "$ext_id" ]; then
             has_metadata=$(grep -q "^buwai-extension-id: $ext_id" "$file" 2>/dev/null && echo "true" || echo "false")
+        else
+            has_metadata=$(grep -q "^buwai-extension-id:" "$file" 2>/dev/null && echo "true" || echo "false")
         fi
         
         if [ "$has_metadata" = "true" ]; then
@@ -231,7 +235,7 @@ display_completion() {
 }
 
 main() {
-    local extension_id="$DEFAULT_EXTENSION_ID"
+    local extension_id=""  # Empty string means remove ALL extensions with buwai-extension-id metadata
     local dry_run=false
 
 
@@ -255,16 +259,16 @@ main() {
                 echo "Usage: ./uninstall.sh [OPTIONS]"
                 echo ""
                 echo "Options:"
-                echo "  --extension-id <name>  Extension identifier (default: buwai-ai-extension)"
+    echo "  --extension-id <name>  Extension identifier (default: ALL extensions)"
                 echo "  --dry-run              Show what would be removed without removing"
                 echo "  --force                Skip confirmation prompt"
                 echo "  --help, -h             Show this help message"
                 echo ""
     echo "Description:"
     echo "  Removes extension files from OpenCode by scanning for metadata tags."
-    echo "  Files with matching 'buwai-extension-id: <id>' metadata and their"
-    echo "  associated assets folders will be removed."
-                echo ""
+    echo "  If --extension-id is NOT specified, removes ALL files with 'buwai-extension-id' metadata."
+    echo "  If --extension-id IS specified, only removes files with matching ID."
+    echo "  Associated assets folders are also removed."
                 echo "Examples:"
                 echo "  ./uninstall.sh"
                 echo "  ./uninstall.sh --extension-id my-extension"
