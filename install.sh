@@ -12,7 +12,6 @@ NC='\033[0m'
 CURRENT_DIR="$(pwd)"
 SOURCE_EXTENSIONS_DIR="$CURRENT_DIR/extensions"
 DEFAULT_EXTENSION_ID="buwai-ai-extension"
-INSTALL_RECORD_FILE=".extension-install"
 
 # OpenCode installation directories
 POSSIBLE_OPENCODE_DIRS=(
@@ -59,7 +58,7 @@ has_frontmatter() {
 has_extension_metadata() {
     local file="$1"
     local ext_id="$2"
-    grep -q "^extension-id: $ext_id" "$file" 2>/dev/null
+    grep -q "^buwai-extension-id: $ext_id" "$file" 2>/dev/null
 }
 
 add_extension_metadata() {
@@ -73,7 +72,7 @@ add_extension_metadata() {
     if ! has_frontmatter "$file"; then
         local tmp_file=$(mktemp)
         echo "---" > "$tmp_file"
-        echo "extension-id: $ext_id" >> "$tmp_file"
+        echo "buwai-extension-id: $ext_id" >> "$tmp_file"
         echo "---" >> "$tmp_file"
         echo "" >> "$tmp_file"
         cat "$file" >> "$tmp_file"
@@ -96,7 +95,7 @@ add_extension_metadata() {
 
         if [[ "$line" == "---" ]]; then
             if [ "$first_delimiter_found" = false ]; then
-                echo "extension-id: $ext_id" >> "$tmp_file"
+            echo "buwai-extension-id: $ext_id" >> "$tmp_file"
                 echo "$line" >> "$tmp_file"
                 first_delimiter_found=true
                 frontmatter_closed=true
@@ -208,24 +207,7 @@ copy_extension_files() {
     echo "$copied_files"
 }
 
-create_install_record() {
-    local ext_id="$1"
-    local opencode_dir="$2"
-    local file_count="$3"
 
-    cat > "$INSTALL_RECORD_FILE" <<EOF
-# Extension Installation Record
-# DO NOT DELETE - Used for uninstallation
-
-EXTENSION_ID="$ext_id"
-INSTALL_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-INSTALL_DIR="$opencode_dir"
-FILES_COUNT="$file_count"
-VERSION="1.0.0"
-EOF
-
-    success_msg "Installation record created: $INSTALL_RECORD_FILE"
-}
 
 display_install_summary() {
     local ext_id="$1"
@@ -321,8 +303,7 @@ main() {
     local copied_count
     copied_count=$(copy_extension_files "$opencode_dir" "$extension_id")
 
-    # Create installation record
-    create_install_record "$extension_id" "$opencode_dir" "$copied_count"
+    # Display summary
 
     # Display summary
     display_install_summary "$extension_id" "$opencode_dir" "$copied_count" "$copied_count"

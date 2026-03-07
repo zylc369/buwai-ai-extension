@@ -11,7 +11,7 @@ NC='\033[0m'
 # Configuration
 CURRENT_DIR="$(pwd)"
 DEFAULT_EXTENSION_ID="buwai-ai-extension"
-INSTALL_RECORD_FILE=".extension-install"
+
 
 # OpenCode installation directories
 POSSIBLE_OPENCODE_DIRS=(
@@ -89,7 +89,7 @@ list_extensions_in_dir() {
     for file in "${raw_files[@]}"; do
         local has_metadata=false
         if [ -n "$ext_id" ]; then
-            has_metadata=$(grep -q "^extension-id: $ext_id" "$file" 2>/dev/null && echo "true" || echo "false")
+            has_metadata=$(grep -q "^buwai-extension-id: $ext_id" "$file" 2>/dev/null && echo "true" || echo "false")
         fi
         
         if [ "$has_metadata" = "true" ]; then
@@ -138,7 +138,7 @@ remove_files() {
     for file in "${raw_files[@]}"; do
         local has_metadata=false
         if [ -n "$ext_id" ]; then
-            has_metadata=$(grep -q "^extension-id: $ext_id" "$file" 2>/dev/null && echo "true" || echo "false")
+            has_metadata=$(grep -q "^buwai-extension-id: $ext_id" "$file" 2>/dev/null && echo "true" || echo "false")
         fi
         
         if [ "$has_metadata" = "true" ]; then
@@ -177,11 +177,6 @@ remove_files() {
         fi
     done
 
-    # Remove installation record if not dry run
-    if [ "$dry_run" = false ]; then
-        rm -f "$INSTALL_RECORD_FILE"
-        success_msg "Removed installation record: $INSTALL_RECORD_FILE"
-    fi
 
     echo "${#files[@]}:${#folders[@]}"
 }
@@ -210,7 +205,6 @@ display_completion() {
     local file_count="$2"
     local folder_count="$3"
     local dry_run="$4"
-    local used_record="$5"
 
     echo ""
     echo "========================================"
@@ -225,11 +219,7 @@ display_completion() {
     echo "Files removed: $file_count"
     echo "Folders removed: $folder_count"
     echo ""
-    if [ "$used_record" = "true" ]; then
-        echo "Used installation record to locate files."
-    else
-        echo "Scanned OpenCode directories to find extension files."
-    fi
+
 
     if [ "$dry_run" = false ]; then
         echo "All files and folders have been removed from OpenCode."
@@ -243,8 +233,7 @@ display_completion() {
 main() {
     local extension_id="$DEFAULT_EXTENSION_ID"
     local dry_run=false
-    local force=false
-    local use_record=true
+
 
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -271,13 +260,10 @@ main() {
                 echo "  --force                Skip confirmation prompt"
                 echo "  --help, -h             Show this help message"
                 echo ""
-                echo "Description:"
-                echo "  Removes extension files from OpenCode by scanning for metadata tags."
-                echo "  Files with matching 'extension-id: <id>' metadata and their"
-                echo "  associated assets folders will be removed."
-                echo ""
-                echo "  If installation record is missing, the script will scan"
-                echo "  OpenCode directories to find extension files."
+    echo "Description:"
+    echo "  Removes extension files from OpenCode by scanning for metadata tags."
+    echo "  Files with matching 'buwai-extension-id: <id>' metadata and their"
+    echo "  associated assets folders will be removed."
                 echo ""
                 echo "Examples:"
                 echo "  ./uninstall.sh"
@@ -296,95 +282,33 @@ main() {
     echo "AI Extension Uninstaller"
     echo "========================================"
     echo ""
-
-    # Try to read installation record first
-    local record_read=false
-    local record_ext_id=""
-    local record_install_dir=""
-
-    if [ -f "$INSTALL_RECORD_FILE" ]; then
-        source "$INSTALL_RECORD_FILE" 2>/dev/null || true
-        if [ -n "$EXTENSION_ID" ]; then
-            record_ext_id="$EXTENSION_ID"
-        fi
-        if [ -n "$INSTALL_DIR" ]; then
-            record_install_dir="$INSTALL_DIR"
-        fi
-        record_read=true
-    fi
-
-    # If record exists and matches provided ID, use it
-    if [ "$record_read" = true ]; then
-        if [ -n "$extension_id" ] && [ "$extension_id" != "$DEFAULT_EXTENSION_ID" ]; then
-            # User provided specific extension ID
-            if [ "$extension_id" != "$record_ext_id" ]; then
-                warning_msg "Provided extension ID ($extension_id) doesn't match record ($record_ext_id)"
-                read -p "Use record anyway or provided ID? [record/provided] : " -r
-                echo
-                if [[ $REPLY =~ ^[Rr] ]]; then
-                    extension_id="$record_ext_id"
-                else
-                    use_record=false
-                fi
-            fi
-        else
-            extension_id="$record_ext_id"
-            install_dir="$record_install_dir"
-        fi
-    fi
-
-    # If we don't have a valid install directory from record, scan OpenCode
-    if [ -z "$install_dir" ] || [ "$use_record" = false ]; then
-        info_msg "Scanning OpenCode directories for extension..."
-        local found_dir=""
-        local found_dir_count=0
-        
-        for dir in "${POSSIBLE_OPENCODE_DIRS[@]}"; do
-            if [ -d "$dir" ]; then
-                # Check if this directory has our extension
-                local test_files
-                test_files=$(list_extensions_in_dir "$dir" "$extension_id")
-                local test_counts=$(echo "$test_files" | grep "^COUNTS:")
-                local test_file_count=$(echo "$test_counts" | cut -d: -f2)
-                
-                if [ "$test_file_count" -gt 0 ]; then
-                    install_dir="$dir"
-                    found_dir_count=$((found_dir_count + 1))
-                fi
-            fi
-        done
-
-        if [ "$found_dir_count" -eq 0 ]; then
-            if [ "$record_read" = true ]; then
-                warning_msg "Extension files not found in OpenCode directories"
-                warning_msg "The installation record may be outdated."
-                echo ""
-                read -p "Try to remove from the recorded directory anyway? (yes/no): " -r
-                echo
-                if [[ $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
-                    install_dir="$record_install_dir"
-                    use_record=false
-                else
-                    error_exit "No extension files found. Cannot proceed with uninstallation."
-                fi
-            else
-                error_exit "No extension files found in OpenCode directories."
+    # Scan OpenCode directories for extension
+    info_msg "Scanning OpenCode directories for extension..."
+    local found_dir=""
+    local found_dir_count=0
+    
+    for dir in "${POSSIBLE_OPENCODE_DIRS[@]}"; do
+        if [ -d "$dir" ]; then
+            # Check if this directory has our extension
+            local test_files
+            test_files=$(list_extensions_in_dir "$dir" "$extension_id")
+            local test_counts=$(echo "$test_files" | grep "^COUNTS:")
+            local test_file_count=$(echo "$test_counts" | cut -d: -f2)
+            
+            if [ "$test_file_count" -gt 0 ]; then
+                install_dir="$dir"
+                found_dir_count=$((found_dir_count + 1))
             fi
         fi
-
-        use_record=false
+    done
+    
+    if [ "$found_dir_count" -eq 0 ]; then
+        error_exit "No extension files found in OpenCode directories."
     fi
-
+    
     info_msg "Extension ID: $extension_id"
-    if [ -n "$install_dir" ]; then
-        info_msg "Install directory: $install_dir"
-    fi
-
-    if [ "$use_record" = true ]; then
-        info_msg "Using installation record to locate files."
-    else
-        info_msg "Scanning for extension files in OpenCode."
-    fi
+    info_msg "Install directory: $install_dir"
+    info_msg "Scanning for extension files in OpenCode."
 
     # List files to be removed
     info_msg "Scanning for extension files..."
@@ -414,7 +338,7 @@ main() {
 
     if [ "$dry_run" = true ]; then
         info_msg "Dry run mode - no files will be removed"
-        display_completion "$extension_id" "$file_count" "$folder_count" true "$use_record"
+        display_completion "$extension_id" "$file_count" "$folder_count" true
         exit 0
     fi
 
@@ -427,7 +351,7 @@ main() {
     local removed_files=$(echo "$result" | cut -d: -f1)
     local removed_folders=$(echo "$result" | cut -d: -f2)
 
-    display_completion "$extension_id" "$removed_files" "$removed_folders" false "$use_record"
+    display_completion "$extension_id" "$removed_files" "$removed_folders" false
 }
 
 main "$@"
