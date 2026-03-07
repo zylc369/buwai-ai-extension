@@ -1,14 +1,31 @@
 # Sisyphus work directory
 /.sisyphus
 
-# Ignore all files in data directory
-/data/*
+# Ignore all files in data directory (all depths)
+/data/**
+!/data/.gitkeep
 
 # But preserve directory structure with .gitkeep files
+# Note: Must negate each parent directory before negating files
+!/data/notes
 !/data/notes/.gitkeep
+
+!/data/home
+!/data/home/.cache
+!/data/home/.cache/opencode
 !/data/home/.cache/opencode/.gitkeep
+
+!/data/home/.config
+!/data/home/.config/opencode
 !/data/home/.config/opencode/.gitkeep
+
+!/data/home/.local
+!/data/home/.local/share
+!/data/home/.local/share/opencode
 !/data/home/.local/share/opencode/.gitkeep
+
+!/data/home/.local/state
+!/data/home/.local/state/opencode
 !/data/home/.local/state/opencode/.gitkeep
 
 # Local notes directory (legacy)
