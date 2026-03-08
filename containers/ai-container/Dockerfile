@@ -79,11 +79,18 @@ RUN printf '#!/bin/sh\nexec ls -ahl "$@"' > /usr/local/bin/ll && chmod +x /usr/l
 # Ensure proper ownership
 RUN chown -R aiuser:aiuser /home/aiuser
 
+# Copy entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Set PATH environment variable for runtime
 ENV PATH="/home/aiuser/.opencode/bin:/home/aiuser/.bun/bin:$PATH"
 
 # Switch to non-root user
 USER aiuser
+
+# Use entrypoint to configure Git with GitHub Token
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Expose ports (4096 for opencode web, 4173 for serve)
 EXPOSE 4096 4173

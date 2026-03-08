@@ -1,6 +1,10 @@
 # Sisyphus work directory
 /.sisyphus
 
+/.sisyphus
+
+# Environment files (contain secrets)
+.env
 # Ignore all files in data directory (all depths)
 /data/**
 !/data/.gitkeep

@@ -4,6 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: ai-doctor-opencode
+    # Load environment variables from .env file (create from .env.example)
+    env_file:
+      - .env
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
     ports:
       - "4097:4096"
     volumes:
