@@ -24,6 +24,9 @@
 !/data/home/.config/opencode/.gitkeep
 !/data/home/.config/opencode/opencode-bak.json
 !/data/home/.config/opencode/oh-my-opencode-bak.json
+!/data/home/.config/opencode/oh-my-opencode.json.bak
+!/data/home/.config/opencode/opencode.json
+!/data/home/.config/opencode/oh-my-opencode.json
 
 !/data/home/.local
 !/data/home/.local/share
@@ -44,4 +47,3 @@
 
 # Backup files
 *~
-*.bak
