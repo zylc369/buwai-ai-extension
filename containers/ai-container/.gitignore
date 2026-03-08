@@ -22,6 +22,8 @@
 !/data/home/.config
 !/data/home/.config/opencode
 !/data/home/.config/opencode/.gitkeep
+!/data/home/.config/opencode/opencode-bak.json
+!/data/home/.config/opencode/oh-my-opencode-bak.json
 
 !/data/home/.local
 !/data/home/.local/share
