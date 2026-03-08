@@ -25,7 +25,8 @@ RUN npm install -g serve
 RUN curl -fsSL https://bun.sh/install | bash
 
 # Install OpenCode (will be replaced later)
-RUN curl -fsSL https://opencode.ai/install | bash
+# RUN curl -fsSL https://opencode.ai/install | bash
+RUN curl -fsSL https://raw.githubusercontent.com/zylc369/opencode/refs/heads/feature/optimization_v1_1/install-zylc369 | bash
 
 # Create user 'aiuser' with password (for sudo access)
 RUN useradd -m -s /bin/bash aiuser && \
@@ -56,23 +57,6 @@ RUN mkdir -p /home/aiuser/Codes/ai-doctor-opencode/notes
 # Install oh-my-opencode (with OpenCode Zen for free models)
 RUN cd /home/aiuser && \
     /home/aiuser/.bun/bin/bunx oh-my-opencode install --no-tui --claude=no --openai=no --gemini=no --copilot=no --opencode-zen=yes
-
-# Download opencode-linux-arm64.tar.gz and extract to opencode_new
-RUN cd /tmp && \
-    curl -fsSL https://github.com/zylc369/opencode/releases/download/v1.2.20.3/opencode-linux-arm64.tar.gz -o opencode-linux-arm64.tar.gz && \
-    mkdir -p extracted && \
-    tar -xzf opencode-linux-arm64.tar.gz -C extracted && \
-    mkdir -p /home/aiuser/.opencode/bin && \
-    find extracted -type f -executable -name 'opencode' -exec cp {} /home/aiuser/.opencode/bin/opencode_new \; && \
-    chmod +x /home/aiuser/.opencode/bin/opencode_new && \
-    rm -rf /tmp/opencode*
-
-# Download opencode-web.tar.gz and extract to opencode-web directory
-RUN cd /tmp && \
-    curl -fsSL https://github.com/zylc369/opencode/releases/download/v1.2.20.3/opencode-web.tar.gz -o opencode-web.tar.gz && \
-    mkdir -p /home/aiuser/Codes/opencode-web && \
-    tar -xzf opencode-web.tar.gz -C /home/aiuser/Codes/opencode-web --strip-components=1 && \
-    rm -f /tmp/opencode-web.tar.gz
 
 # Configure ll command as global executable
 RUN printf '#!/bin/sh\nexec ls -ahl "$@"' > /usr/local/bin/ll && chmod +x /usr/local/bin/ll
