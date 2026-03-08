@@ -47,7 +47,8 @@ if [ -d "$REPO_DIR/.git" ]; then
     echo "Repository updated to latest $BRANCH branch."
 else
     echo "Cloning repository..."
-    rm -rf "$REPO_DIR"
+    # Clear directory contents (can't remove mount point itself)
+    rm -rf "${REPO_DIR:?}/"* "${REPO_DIR:?}/."* 2>/dev/null || true
     git clone --branch "$BRANCH" --single-branch "$REPO_URL" "$REPO_DIR"
     echo "Repository cloned successfully."
 fi
