@@ -40,6 +40,11 @@
 !/data/home/data/ai-doctor-notes
 !/data/home/data/ai-doctor-notes/.gitkeep
 
+!/data/home/Codes
+!/data/home/Codes/.gitkeep
+!/data/home/Codes/buwai-ai-extension
+!/data/home/Codes/buwai-ai-extension/.gitkeep
+
 # macOS extended attributes
 ._*
 .DS_Store
