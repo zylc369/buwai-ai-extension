@@ -3,10 +3,8 @@ FROM ubuntu:22.04
 # Set non-interactive mode
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install required packages (using China mirror)
-RUN sed -i 's/ports.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
-    sed -i 's/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
-    apt-get update && apt-get install -y \
+# Install required packages
+RUN apt-get update && apt-get install -y \
     curl \
     lsof \
     git \

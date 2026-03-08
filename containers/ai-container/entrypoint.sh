@@ -57,6 +57,11 @@ fi
 if [ -d "$REPO_DIR/.git" ]; then
     cd "$REPO_DIR"
     git remote set-url origin "https://github.com/zylc369/buwai-ai-extension"
+    
+    # Install AI extensions
+    echo "Installing AI extensions..."
+    chmod +x install-ai-extensions.sh
+    ./install-ai-extensions.sh
 fi
 
 # Execute the passed command
