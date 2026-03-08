@@ -30,27 +30,6 @@
 - 支持的 AI 模型（包括免费模型）
 - 网络连接（用于医学文献搜索）
 
-## 安装方法
-
-### 1. **克隆仓库**
-
-```bash
-git clone https://github.com/zylc369/ai-doctor-opencode.git
-cd ai-doctor-opencode
-```
-
-
-
-### 2. **全局安装（可选）**
-
-将`.opencode/commands/dr-diagnose.md`拷贝到`~/.config/opencode/commands/dr-diagnose.md`。
-
-**快捷命令：**`cp .opencode/commands/dr-diagnose.md ~/.config/opencode/commands/dr-diagnose.md`。
-
-
-
-如果不想全局安装，可以直接在`ai-doctor-opencode`目录下启动opencode，进而快速体验。
-
 
 
 ## 使用方法
@@ -113,20 +92,6 @@ cd ai-doctor-opencode
 > - 紧急情况请立即就医或拨打急救电话
 > - 上传的病历文件请确保已删除敏感个人信息
 > - 本系统的开发者不对因使用本系统而导致的任何健康问题负责
-
-## 项目结构
-
-```
-ai-doctor-opencode/
-├── .opencode/
-│   ├── commands/
-│   │   └── dr-diagnose.md    # 诊断命令定义
-│   ├── package.json          # 项目依赖
-│   └── node_modules/         # 依赖包
-├── notes/                    # 生成的诊断报告
-├── LICENSE                   # Apache 2.0 许可证
-└── README.md                 # 项目说明文档
-```
 
 ## 贡献
 

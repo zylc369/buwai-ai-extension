@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ai-doctor-opencode
+    container_name: ai-container
     # Load environment variables from .env file (create from .env.example)
     env_file:
       - .env
@@ -12,7 +12,7 @@ services:
     ports:
       - "4097:4096"
     volumes:
-      - ./data/home/data/ai-doctor-notes:/home/aiuser/Codes/ai-doctor-opencode/notes
+      - ./data/home/data/ai-doctor-notes:/home/aiuser/Codes/ai-doctor/notes
       - ./data/home/.cache/opencode:/home/aiuser/.cache/opencode
       - ./data/home/.config/opencode:/home/aiuser/.config/opencode
       - ./data/home/.local/share/opencode:/home/aiuser/.local/share/opencode
@@ -21,9 +21,8 @@ services:
     restart: on-failure:5
     command: >
       bash -c "
-      cd /home/aiuser/Codes/ai-doctor-opencode &&
-      git pull origin main &&
+      cd /home/aiuser/Codes/ai-doctor &&
       mkdir -p notes &&
-      /home/aiuser/.opencode/bin/opencode_new web --hostname 0.0.0.0 --port 4096 --unmatched-request-proxy http://localhost:4173 &
+      /home/aiuser/.opencode/bin/opencode web --hostname 0.0.0.0 --port 4096 --unmatched-request-proxy http://localhost:4173 &
       serve -s /home/aiuser/.opencode/web -l 4173
       "

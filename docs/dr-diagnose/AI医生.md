@@ -116,28 +116,6 @@
 - **诊断报告**：`[患者名]-report-[时间戳].md` - SOAP 格式的最终报告
 
 
-
-## 安装方法
-
-### 1. **克隆仓库**
-
-```bash
-git clone https://github.com/zylc369/ai-doctor-opencode.git
-cd ai-doctor-opencode
-```
-
-### 2. **全局安装（可选）**
-
-将`.opencode/commands/dr-diagnose.md`拷贝到`~/.config/opencode/commands/dr-diagnose.md`。
-
-**快捷命令：**`cp .opencode/commands/dr-diagnose.md ~/.config/opencode/commands/dr-diagnose.md`。
-
-
-
-如果不想全局安装，可以直接在`ai-doctor-opencode`目录下启动opencode，进而快速体验。
-
-
-
 ## 使用方法
 
 ### 基本用法

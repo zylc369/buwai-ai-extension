@@ -10,7 +10,7 @@ NC='\033[0m' # No Color
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONTAINER_NAME="ai-doctor-opencode"
+CONTAINER_NAME="ai-container"
 
 # Function to print colored messages
 info_msg() {

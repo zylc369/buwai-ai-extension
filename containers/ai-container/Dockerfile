@@ -3,9 +3,12 @@ FROM ubuntu:22.04
 # Set non-interactive mode
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install required packages
-RUN apt-get update && apt-get install -y \
+# Install required packages (using China mirror)
+RUN sed -i 's/ports.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
+    sed -i 's/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
+    apt-get update && apt-get install -y \
     curl \
+    lsof \
     git \
     ca-certificates \
     sudo \
@@ -33,26 +36,19 @@ RUN useradd -m -s /bin/bash aiuser && \
     echo "aiuser:Lcnihao2010" | chpasswd && \
     echo "aiuser ALL=(ALL) ALL" >> /etc/sudoers
 
-# Copy opencode and bun to aiuser's home
+# Copy opencode and bun from root to aiuser's home
+# Reason: Install scripts run as root, installing to /root/.opencode and /root/.bun
+# But the container runs as 'aiuser' (see USER aiuser below), who cannot access /root
+# So we copy these tools to /home/aiuser so aiuser can use them at runtime
 RUN mkdir -p /home/aiuser/.opencode && \
+    mkdir -p /home/aiuser/.config/opencode && \
+    mkdir -p /home/aiuser/Codes/ai-doctor/notes && \
     cp -r /root/.opencode/* /home/aiuser/.opencode/ && \
     mkdir -p /home/aiuser/.bun && \
     (cp -r /root/.bun/* /home/aiuser/.bun/ 2>/dev/null || true)
 
-# Copy opencode config
-RUN mkdir -p /home/aiuser/.config/opencode
-
 # Switch to user directory
 WORKDIR /home/aiuser
-
-# Create Codes directory
-RUN mkdir -p /home/aiuser/Codes
-
-# Clone ai-doctor-opencode repository to ~/Codes/ai-doctor-opencode
-RUN git clone https://github.com/zylc369/ai-doctor-opencode.git /home/aiuser/Codes/ai-doctor-opencode
-
-# Create notes directory
-RUN mkdir -p /home/aiuser/Codes/ai-doctor-opencode/notes
 
 # Install oh-my-opencode (with OpenCode Zen for free models)
 RUN cd /home/aiuser && \
