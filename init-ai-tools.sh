@@ -38,15 +38,16 @@ check_npm() {
     success_msg "npm is available"
 }
 
-# Install bash-language-server
-install_bash_language_server() {
-    info_msg "Installing bash-language-server..."
+# Install language server
+install_language_server() {
+    local server_name="$1"
+    info_msg "Installing $server_name..."
     
-    if npm install -g bash-language-server 2>&1; then
-        success_msg "bash-language-server installed successfully"
+    if npm install -g $server_name 2>&1; then
+        success_msg "$server_name installed successfully"
         return 0
     else
-        warning_msg "Failed to install bash-language-server"
+        warning_msg "Failed to install $server_name"
         return 1
     fi
 }
@@ -62,7 +63,14 @@ main() {
     
     local failed_count=0
     
-    if ! install_bash_language_server; then
+    if ! install_language_server "bash-language-server"; then
+        failed_count=$((failed_count + 1))
+    fi
+
+    echo ""
+    echo ""
+
+    if ! install_language_server "typescript-language-server"; then
         failed_count=$((failed_count + 1))
     fi
     
