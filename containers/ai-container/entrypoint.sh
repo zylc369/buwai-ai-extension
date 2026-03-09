@@ -54,27 +54,18 @@ if [ -d "$REPO_DIR/.git" ]; then
     echo "Repository exists, updating..."
     cd "$REPO_DIR"
     
-    # Check if sparse checkout is properly configured
-    SPARSE_CONFIGURED=false
-    if [ -f "$REPO_DIR/.git/info/sparse-checkout" ]; then
-        # Verify the patterns match what we expect
-        if grep -q "^extensions/$" "$REPO_DIR/.git/info/sparse-checkout" 2>/dev/null; then
-            SPARSE_CONFIGURED=true
-        fi
-    fi
-    
-    if [ "$SPARSE_CONFIGURED" = false ]; then
-        echo "Enabling sparse checkout for existing repository..."
+    # Ensure sparse checkout is configured
+    if [ ! -f "$REPO_DIR/.git/info/sparse-checkout" ] || ! grep -q "^/extensions/$" "$REPO_DIR/.git/info/sparse-checkout" 2>/dev/null; then
+        echo "Configuring sparse checkout..."
         # Remove all files from working directory (keep .git)
         find "$REPO_DIR" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + 2>/dev/null || true
-        # Re-initialize as sparse checkout (non-cone mode for file support)
         git sparse-checkout init --no-cone
         printf '%s\n' "$SPARSE_CHECKOUT_CONTENT" | git sparse-checkout set --stdin
     fi
     
+    # Fetch and checkout - only fetches files needed for sparse checkout
     git fetch origin "$BRANCH"
     git checkout "$BRANCH"
-    # Reapply sparse checkout rules to remove unwanted files
     git sparse-checkout reapply
     echo "Repository updated to latest $BRANCH branch."
 else
@@ -82,16 +73,16 @@ else
     # Clear directory contents (can't remove mount point itself)
     rm -rf "${REPO_DIR:?}/"* "${REPO_DIR:?}/".* 2>/dev/null || true
     
-    # Clone with sparse checkout
-    git clone --filter=blob:none --sparse --branch "$BRANCH" --single-branch "$REPO_URL" "$REPO_DIR"
+    # Clone without checkout to avoid pulling all files
+    git clone --filter=blob:none --no-checkout --branch "$BRANCH" --single-branch "$REPO_URL" "$REPO_DIR"
     
-    # Configure sparse checkout patterns (non-cone mode for file support)
+    # Configure sparse checkout before first checkout
     cd "$REPO_DIR"
     git sparse-checkout init --no-cone
     printf '%s\n' "$SPARSE_CHECKOUT_CONTENT" | git sparse-checkout set --stdin
     
-    # Reapply sparse checkout rules to remove unwanted files
-    git sparse-checkout reapply
+    # Now checkout - only pulls files matching sparse patterns
+    git checkout "$BRANCH"
     
     echo "Repository cloned with sparse checkout."
 fi
