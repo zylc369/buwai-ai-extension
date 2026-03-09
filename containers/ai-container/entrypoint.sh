@@ -36,14 +36,16 @@ fi
 REPO_DIR="/home/aiuser/Codes/buwai-ai-extension"
 BRANCH="main"
 
-# Define files and directories to checkout (sparse checkout patterns)
-SPARSE_PATTERNS=(
-    "extensions/"
-    "install-ai-extensions.sh"
-    "init-ai-tools.sh"
-    "uninstall-extensions.sh"
-    ".gitignore"
-)
+# Generate sparse-checkout file content (non-cone mode format)
+# In non-cone mode, we need to explicitly include and exclude patterns
+SPARSE_CHECKOUT_CONTENT="/*
+!/*
+!/*/
+/extensions/
+/install-ai-extensions.sh
+/init-ai-tools.sh
+/uninstall-extensions.sh
+/.gitignore"
 
 echo ""
 echo "Setting up buwai-ai-extension repository (sparse checkout)..."
@@ -65,15 +67,15 @@ if [ -d "$REPO_DIR/.git" ]; then
         echo "Enabling sparse checkout for existing repository..."
         # Remove all files from working directory (keep .git)
         find "$REPO_DIR" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + 2>/dev/null || true
-        # Re-initialize as sparse checkout
-        git sparse-checkout init --cone
-        git sparse-checkout set "${SPARSE_PATTERNS[@]}"
+        # Re-initialize as sparse checkout (non-cone mode for file support)
+        git sparse-checkout init --no-cone
+        printf '%s\n' "$SPARSE_CHECKOUT_CONTENT" | git sparse-checkout set --stdin
     fi
     
     git fetch origin "$BRANCH"
-    git reset --hard "origin/$BRANCH"
-    # Remove files outside sparse checkout definition
-    git sparse-checkout clean --force
+    git checkout "$BRANCH"
+    # Reapply sparse checkout rules to remove unwanted files
+    git sparse-checkout reapply
     echo "Repository updated to latest $BRANCH branch."
 else
     echo "Cloning repository with sparse checkout..."
@@ -83,10 +85,13 @@ else
     # Clone with sparse checkout
     git clone --filter=blob:none --sparse --branch "$BRANCH" --single-branch "$REPO_URL" "$REPO_DIR"
     
-    # Configure sparse checkout patterns
+    # Configure sparse checkout patterns (non-cone mode for file support)
     cd "$REPO_DIR"
-    git sparse-checkout init --cone
-    git sparse-checkout set "${SPARSE_PATTERNS[@]}"
+    git sparse-checkout init --no-cone
+    printf '%s\n' "$SPARSE_CHECKOUT_CONTENT" | git sparse-checkout set --stdin
+    
+    # Reapply sparse checkout rules to remove unwanted files
+    git sparse-checkout reapply
     
     echo "Repository cloned with sparse checkout."
 fi
