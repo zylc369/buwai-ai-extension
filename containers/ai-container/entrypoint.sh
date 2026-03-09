@@ -26,7 +26,7 @@ else
     echo "Warning: GITHUB_TOKEN not set. Git operations may fail for private repos."
 fi
 
-# Clone or pull buwai-ai-extension repository
+# Clone or pull buwai-ai-extension repository with sparse checkout
 # Use GITHUB_TOKEN in URL for private repo support
 if [ -n "$GITHUB_TOKEN" ]; then
     REPO_URL="https://${GITHUB_TOKEN}@github.com/zylc369/buwai-ai-extension"
@@ -36,21 +36,59 @@ fi
 REPO_DIR="/home/aiuser/Codes/buwai-ai-extension"
 BRANCH="main"
 
+# Define files and directories to checkout (sparse checkout patterns)
+SPARSE_PATTERNS=(
+    "extensions/"
+    "install-ai-extensions.sh"
+    "init-ai-tools.sh"
+    "uninstall-extensions.sh"
+    ".gitignore"
+)
+
 echo ""
-echo "Setting up buwai-ai-extension repository..."
+echo "Setting up buwai-ai-extension repository (sparse checkout)..."
 
 if [ -d "$REPO_DIR/.git" ]; then
-    echo "Repository exists, pulling latest changes..."
+    echo "Repository exists, updating..."
     cd "$REPO_DIR"
+    
+    # Check if sparse checkout is properly configured
+    SPARSE_CONFIGURED=false
+    if [ -f "$REPO_DIR/.git/info/sparse-checkout" ]; then
+        # Verify the patterns match what we expect
+        if grep -q "^extensions/$" "$REPO_DIR/.git/info/sparse-checkout" 2>/dev/null; then
+            SPARSE_CONFIGURED=true
+        fi
+    fi
+    
+    if [ "$SPARSE_CONFIGURED" = false ]; then
+        echo "Enabling sparse checkout for existing repository..."
+        # Remove all files from working directory (keep .git)
+        find "$REPO_DIR" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + 2>/dev/null || true
+        # Re-initialize as sparse checkout
+        git sparse-checkout init --cone
+        git sparse-checkout set "${SPARSE_PATTERNS[@]}"
+    fi
+    
     git fetch origin "$BRANCH"
     git reset --hard "origin/$BRANCH"
+    # Remove files outside sparse checkout definition
+    git sparse-checkout clean --force
     echo "Repository updated to latest $BRANCH branch."
 else
-    echo "Cloning repository..."
+    echo "Cloning repository with sparse checkout..."
     # Clear directory contents (can't remove mount point itself)
-    rm -rf "${REPO_DIR:?}/"* "${REPO_DIR:?}/."* 2>/dev/null || true
-    git clone --branch "$BRANCH" --single-branch "$REPO_URL" "$REPO_DIR"
-    echo "Repository cloned successfully."
+    rm -rf "${REPO_DIR:?}/"* "${REPO_DIR:?}/".* 2>/dev/null || true
+    
+    # Clone with sparse checkout
+    git clone --filter=blob:none --sparse --branch "$BRANCH" --single-branch "$REPO_URL" "$REPO_DIR"
+    
+    # Configure sparse checkout patterns
+    cd "$REPO_DIR"
+    git sparse-checkout init --cone
+    git sparse-checkout set "${SPARSE_PATTERNS[@]}"
+    
+    echo "Repository cloned with sparse checkout."
 fi
 
 # Replace remote URL to remove token (credential.helper will handle auth)
