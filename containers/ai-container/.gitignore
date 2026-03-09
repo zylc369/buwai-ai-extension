@@ -42,8 +42,7 @@
 
 !/data/home/Codes
 !/data/home/Codes/.gitkeep
-!/data/home/Codes/buwai-ai-extension
-!/data/home/Codes/buwai-ai-extension/.gitkeep
+/data/home/Codes/buwai-ai-extension
 
 # macOS extended attributes
 ._*
