@@ -68,7 +68,8 @@ while [[ $# -gt 0 ]]; do
             echo "This script will:"
             echo "  1. Check for .env file and GITHUB_TOKEN"
             echo "  2. Prompt for token if not found"
-            echo "  3. Start or restart the Docker container"
+            echo "  3. Check for auth.json and API key"
+            echo "  4. Start or restart the Docker container"
             exit 0
             ;;
         *)
@@ -140,6 +141,79 @@ if [ "$TOUCH_ENV" = true ]; then
         # Add new GITHUB_TOKEN
         echo "GITHUB_TOKEN=${INPUT_TOKEN}" >> "$ENV_FILE"
         success_msg "Token saved to .env"
+        break
+    done
+fi
+
+# Step 1.5: Check and create auth.json with API key
+AUTH_DIR="$SCRIPT_DIR/data/home/.local/share/opencode"
+AUTH_FILE="$AUTH_DIR/auth.json"
+NEED_API_KEY=false
+
+info_msg "Checking API key configuration..."
+
+# Create directory if not exists
+mkdir -p "$AUTH_DIR"
+
+# Check if auth.json exists and has valid keys
+if [ ! -f "$AUTH_FILE" ]; then
+    NEED_API_KEY=true
+    info_msg "auth.json not found"
+else
+    # Check if file contains valid keys for both providers
+    if ! grep -q '"zai-coding-plan"' "$AUTH_FILE" 2>/dev/null; then
+        NEED_API_KEY=true
+        info_msg "zai-coding-plan not found in auth.json"
+    elif ! grep -q '"zhipuai-coding-plan"' "$AUTH_FILE" 2>/dev/null; then
+        NEED_API_KEY=true
+        info_msg "zhipuai-coding-plan not found in auth.json"
+    else
+        # Check if keys are non-empty
+        ZAI_KEY=$(grep -A 3 '"zai-coding-plan"' "$AUTH_FILE" | grep '"key"' | sed 's/.*"key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' 2>/dev/null || echo "")
+        ZHIPU_KEY=$(grep -A 3 '"zhipuai-coding-plan"' "$AUTH_FILE" | grep '"key"' | sed 's/.*"key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' 2>/dev/null || echo "")
+        
+        if [ -z "$ZAI_KEY" ] || [ -z "$ZHIPU_KEY" ]; then
+            NEED_API_KEY=true
+            info_msg "API key is empty in auth.json"
+        else
+            success_msg "API key found in auth.json"
+        fi
+    fi
+fi
+
+# Prompt for API key if needed
+if [ "$NEED_API_KEY" = true ]; then
+    echo ""
+    warning_msg "请输入 API Key，用于 zai-coding-plan 和 zhipuai-coding-plan"
+    info_msg "同一个 key 可同时用于两个服务"
+    echo ""
+    
+    while true; do
+        read -p "API Key: " INPUT_API_KEY
+        
+        # Trim whitespace
+        INPUT_API_KEY=$(trim "$INPUT_API_KEY")
+        
+        if [ -z "$INPUT_API_KEY" ]; then
+            echo ""
+            error_exit "未输入 API Key，脚本终止。请重新运行脚本并输入有效的 API Key。"
+        fi
+        
+        # Create auth.json with the key
+        cat > "$AUTH_FILE" << EOF
+{
+  "zai-coding-plan": {
+    "type": "api",
+    "key": "${INPUT_API_KEY}"
+  },
+  "zhipuai-coding-plan": {
+    "type": "api",
+    "key": "${INPUT_API_KEY}"
+  }
+}
+EOF
+        chmod 600 "$AUTH_FILE"
+        success_msg "API Key saved to auth.json"
         break
     done
 fi
