@@ -1,3 +1,7 @@
+---
+buwai-extension-id: AGENTS
+---
+
 # Commands
 
 ## OVERVIEW
