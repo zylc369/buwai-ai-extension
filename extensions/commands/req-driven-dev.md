@@ -272,7 +272,7 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 
 **步骤 3.1: 生成执行计划**
 
-使用 **计划构建 Agent** (优先 `Prometheus (Plan Builder)`, 降级 `plan`) 在需求目录内创建 `plan.md`：
+在需求目录内创建 `plan.md`：
 
 1. **分解为原子任务**: 明确输入、输出、成功标准；识别依赖项；标记可并行的任务
 2. **向用户展示计划**: 显示带依赖项的编号任务列表；显示预估复杂度；突出需要输入的决策
@@ -288,7 +288,6 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 用当前阶段和任务进度更新 `active-requirements.md`。
 
 **必须做:**
-- 使用计划构建 Agent (Prometheus > plan 降级) 生成计划
 - 在需求目录内创建计划
 - 涉及实现时包含测试任务
 - 执行前获得用户明确批准
@@ -296,13 +295,12 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 **绝不能做:**
 - 跳过用户计划审批
 - 从计划中省略测试
-- 跳过计划构建 Agent 直接手动生成计划
 
 ### 阶段 4: 执行
 
 **步骤 4.1: 执行任务**
 
-使用 **计划执行 Agent** (优先 `Atlas (Plan Executor)`, 降级 `build`) 按依赖顺序执行任务；尽可能同时运行并行任务。
+按依赖顺序执行任务；尽可能同时运行并行任务。
 
 **步骤 4.2: 追踪进度**
 
@@ -319,7 +317,6 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 - 在 `index.md` 补充历史中记录变更
 
 **必须做:**
-- 使用计划执行 Agent (Atlas > build 降级) 执行任务
 - 每个阶段后更新 `index.md` 进度表格
 - 状态变更时更新 `active-requirements.md`
 - 记录任何需求变更
@@ -328,7 +325,6 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 - 任务完成后跳过验证
 - 当前阶段验证失败就进入下一阶段
 - 未经记录就修改需求
-- 跳过计划执行 Agent 直接手动执行
 
 ### 阶段 5: 验证与归档
 
@@ -380,44 +376,6 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 
 ---
 
-## Agent 配置
-
-### 计划构建 Agent
-
-| 优先级 | Agent | 降级方案 |
-|--------|-------|----------|
-| 1 (首选) | `Prometheus (Plan Builder)` | — |
-| 2 (降级) | `plan` | 当 Prometheus 不可用时 |
-
-**使用场景**: 阶段 3 (规划) — 生成执行计划、任务分解、依赖分析
-
-```bash
-# 优先尝试
-task(subagent_type="Prometheus (Plan Builder)", prompt="...")
-
-# Prometheus 不可用时降级
-task(subagent_type="plan", prompt="...")
-```
-
-### 计划执行 Agent
-
-| 优先级 | Agent | 降级方案 |
-|--------|-------|----------|
-| 1 (首选) | `Atlas (Plan Executor)` | — |
-| 2 (降级) | `build` | 当 Atlas 不可用时 |
-
-**使用场景**: 阶段 4 (执行) — 按计划实现任务、验证产出
-
-```bash
-# 优先尝试
-task(subagent_type="Atlas (Plan Executor)", prompt="...")
-
-# Atlas 不可用时降级
-task(subagent_type="build", prompt="...")
-```
-
----
-
 ## 实现优先级
 
 ### 必须规则
@@ -427,18 +385,16 @@ task(subagent_type="build", prompt="...")
 3. 生成渐进式披露结构（索引 + 子文档）
 4. 创建新需求前检查相似度（70% 阈值）
 5. 如果语义相关则补充现有需求
-6. 使用计划构建 Agent (Prometheus > plan 降级) 生成执行计划
-7. 规划前生成需求文档
-8. 每次新建/更新需求时更新 需求文档索引.md
-9. 状态变更时更新 active-requirements.md
-10. 创建详细计划并获得用户确认
-11. 涉及实现时在计划中包含测试
-12. 使用计划执行 Agent (Atlas > build 降级) 执行任务
-13. 将已完成的需求归档到 _archive/ 并附带元数据
-14. 在索引中保留最近 10 个已完成的需求
-15. 当需求目录为空时分析会话上下文
-16. 根据需求文档验证输出
-17. 仅在真正模糊时提出澄清问题
+6. 规划前生成需求文档
+7. 每次新建/更新需求时更新 需求文档索引.md
+8. 状态变更时更新 active-requirements.md
+9. 创建详细计划并获得用户确认
+10. 涉及实现时在计划中包含测试
+11. 将已完成的需求归档到 _archive/ 并附带元数据
+12. 在索引中保留最近 10 个已完成的需求
+13. 当需求目录为空时分析会话上下文
+14. 根据需求文档验证输出
+15. 仅在真正模糊时提出澄清问题
 
 ### 绝不能规则
 
@@ -449,14 +405,12 @@ task(subagent_type="build", prompt="...")
 5. 没有需求文档就开始实现
 6. 跳过用户计划审批
 7. 从计划中省略测试
-8. 跳过计划构建 Agent (Prometheus/plan) 直接手动生成计划
-9. 跳过计划执行 Agent (Atlas/build) 直接手动执行任务
-10. 归档未经验收标准验证的需求
-11. 删除已归档的需求
-12. slug 超过 50 个字符
-13. 从索引中移除已完成的需求（保留最近 10 个）
-14. 没有验证报告就声明完成
-15. 未经用户明确批准就缩减范围
+8. 归档未经验收标准验证的需求
+9. 删除已归档的需求
+10. slug 超过 50 个字符
+11. 从索引中移除已完成的需求（保留最近 10 个）
+12. 没有验证报告就声明完成
+13. 未经用户明确批准就缩减范围
 
 ---
 
