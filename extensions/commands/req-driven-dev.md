@@ -59,7 +59,7 @@ buwai-extension-id: req-driven-dev
 
 ```
 {OutputDir}/                              # 默认: docs/requirements/
-├── requirements-index.md                  # 所有需求的主索引
+├── 需求文档索引.md                        # 所有需求的主索引
 ├── active-requirements.md                 # 当前工作追踪器
 ├── req-{timestamp}-{slug}/               # 需求目录
 │   ├── index.md                          # 摘要 + 进度（入口点）
@@ -91,7 +91,7 @@ buwai-extension-id: req-driven-dev
 
 ### 文档模板
 
-#### requirements-index.md
+#### 需求文档索引.md
 
 主索引包含以下表格：
 - **活动需求**: ID、标题、状态、优先级、阶段、创建时间、摘要
@@ -248,7 +248,7 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 
 **步骤 2.3: 更新索引文件**
 
-1. 创建/更新 `requirements-index.md`: 添加到"活动需求"（新建）或更新状态/阶段（补充）
+1. 创建/更新 `需求文档索引.md`: 添加到"活动需求"（新建）或更新状态/阶段（补充）
 2. 创建/更新 `active-requirements.md`: 添加到"当前进行中"（立即）、"接下来"（待处理）或"已阻塞"（有依赖项）
 
 **步骤 2.4: 更新补充历史（补充时）**
@@ -258,7 +258,7 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 **必须做:**
 - 为每个独立需求创建目录结构
 - 生成所有必需的子文档
-- 每次新建/更新需求时更新 requirements-index.md
+- 每次新建/更新需求时更新 需求文档索引.md
 - 状态变更时更新 active-requirements.md
 - 更新现有需求时添加补充历史条目
 
@@ -341,7 +341,7 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 1. **创建归档目录**: `{OutputDir}/_archive/req-{timestamp}-{slug}/`
 2. **移动所有文档**: 保留原始目录名，移动所有子文档
 3. **创建归档元数据**: 创建包含完成信息的 `_archived-at.md`
-4. **更新 requirements-index.md**: 从"活动"移至"已完成（最近 10 个）"；如已完成超过 10 个，移除最旧的
+4. **更新 需求文档索引.md**: 从"活动"移至"已完成（最近 10 个）"；如已完成超过 10 个，移除最旧的
 5. **更新 active-requirements.md**: 从"当前进行中"移除；更新依赖需求的状态
 
 **归档命名约定**: 保留原始 `req-{original-timestamp}-{original-slug}/` 名称以实现可追溯性、可搜索性和链接一致性。
@@ -386,7 +386,7 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 4. 创建新需求前检查相似度（70% 阈值）
 5. 如果语义相关则补充现有需求
 6. 规划前生成需求文档
-7. 每次新建/更新需求时更新 requirements-index.md
+7. 每次新建/更新需求时更新 需求文档索引.md
 8. 状态变更时更新 active-requirements.md
 9. 创建详细计划并获得用户确认
 10. 涉及实现时在计划中包含测试
@@ -420,7 +420,7 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 
 | 文件 | 用途 | 更新时机 |
 |------|---------|---------|
-| `requirements-index.md` | 所有需求的主索引 | 每次需求变更 |
+| `需求文档索引.md` | 所有需求的主索引 | 每次需求变更 |
 | `active-requirements.md` | 当前工作追踪器 | 每次状态变更 |
 
 ### 需求目录结构
@@ -456,7 +456,7 @@ YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_sta
 
 **发现**: 目录为空 → 分析会话上下文 → 创建新的独立需求
 
-**生成**: `requirements-index.md`、`active-requirements.md`、`req-20260314-143025-add-dark-mode-toggle-settings-page/` 及所有子文档
+**生成**: `需求文档索引.md`、`active-requirements.md`、`req-20260314-143025-add-dark-mode-toggle-settings-page/` 及所有子文档
 
 **索引**: 添加到"活动需求"表格
 
