@@ -122,7 +122,7 @@ install_basedpyright() {
     pip3 install --upgrade certifi 2>&1 || warning_msg "Failed to upgrade certifi"
     
     # Attempt installation
-    if pip3 install "basedpyright==1.38.2"; then
+    if pip3 install "basedpyright"; then
         success_msg "basedpyright installed successfully"
         return 0
     else
