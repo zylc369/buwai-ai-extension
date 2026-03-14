@@ -497,3 +497,7 @@ Create `verify.md` with: acceptance criteria results, test results, issues found
 4. Create `_archived-at.md`
 5. Update index: Active → Completed (last 10)
 6. Update tracker: Remove from In Progress
+
+---
+
+ulw
