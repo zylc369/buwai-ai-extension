@@ -1,502 +1,502 @@
 ---
-description: Requirement-driven development with progressive disclosure documentation, context-based generation, and archive system
+description: 需求驱动开发，支持渐进式披露文档、基于上下文的生成和归档系统
 buwai-extension-id: req-driven-dev
 ---
 
-# Requirement-Driven Development
+# 需求驱动开发
 
-Transform user requirements into verified implementation through systematic workflow with progressive disclosure documentation.
+通过系统化工作流和渐进式披露文档，将用户需求转化为经过验证的实现。
 
-## Key Features
+## 核心特性
 
-- **Progressive Disclosure**: Requirements split into focused sub-documents
-- **Context-Based Generation**: Generate requirements from session/tasks/code when directory empty
-- **Smart Supplement Logic**: Update existing related requirements vs creating duplicates (70% similarity threshold)
-- **Index & Tracking**: Master index + active tracker for navigation
-- **Archive System**: Completed requirements archived with traceable naming
+- **渐进式披露**：需求拆分为聚焦的子文档
+- **基于上下文的生成**：当目录为空时，从会话/任务/代码生成需求
+- **智能补充逻辑**：更新现有相关需求而非创建重复项（70%相似度阈值）
+- **索引与追踪**：主索引 + 活动追踪器用于导航
+- **归档系统**：已完成需求使用可追溯命名归档
 
-## Usage
+## 使用方法
 
 ```bash
-# Basic usage
+# 基本用法
 /req-driven-dev "Add user authentication with OAuth2 support"
 
-# Specify output directory
+# 指定输出目录
 /req-driven-dev "Implement payment integration" ./docs/requirements
 
-# Specify both output and historical directories
+# 同时指定输出和历史目录
 /req-driven-dev "Add notification system" ./docs/requirements ./docs/legacy-requirements
 
-# With context file reference
+# 引用上下文文件
 /req-driven-dev "Refactor API layer based on architecture-review.md"
 
-# Mark requirement as completed (triggers archive)
+# 标记需求为已完成（触发归档）
 /req-driven-dev --complete REQ-20260314-143025
 ```
 
-## Parameters
+## 参数
 
-| Parameter | Default | Description |
+| 参数 | 默认值 | 描述 |
 |-----------|---------|-------------|
-| Requirement | required | The requirement text or description to implement |
-| OutputDir | `docs/requirements` | Directory for requirement documents |
-| HistoryDir | `docs/requirements` | Directory containing historical requirements for reference |
-| `--complete REQ-ID` | optional | Mark requirement as completed and archive |
+| Requirement | 必需 | 要实现的需求文本或描述 |
+| OutputDir | `docs/requirements` | 需求文档目录 |
+| HistoryDir | `docs/requirements` | 包含历史需求供参考的目录 |
+| `--complete REQ-ID` | 可选 | 标记需求为已完成并归档 |
 
-## Workflow Phases
+## 工作流阶段
 
-1. **Discovery** - Analyze context, check existing requirements, determine supplement vs independent
-2. **Documentation** - Generate progressive disclosure document structure
-3. **Planning** - Create detailed execution plan with user confirmation
-4. **Execution** - Implement with continuous verification against requirements
-5. **Validation & Archive** - Test, verify, and archive completed requirements
+1. **发现** - 分析上下文，检查现有需求，确定是补充还是独立
+2. **文档化** - 生成渐进式披露文档结构
+3. **规划** - 创建详细执行计划并获得用户确认
+4. **执行** - 实现并持续验证是否符合需求
+5. **验证与归档** - 测试、验证并归档已完成的需求
 
 ---
 
-## DOCUMENT STRUCTURE (Progressive Disclosure)
+## 文档结构（渐进式披露）
 
-### Directory Layout
+### 目录布局
 
 ```
-{OutputDir}/                              # Default: docs/requirements/
-├── requirements-index.md                  # Master index of all requirements
-├── active-requirements.md                 # Current work tracker
-├── req-{timestamp}-{slug}/               # Requirement directory
-│   ├── index.md                          # Summary + progress (entry point)
-│   ├── functional.md                     # Functional requirements (FR-*)
-│   ├── non-functional.md                 # Non-functional requirements (NFR-*)
-│   ├── technical.md                      # Technical approach + constraints
-│   ├── test-strategy.md                  # Test plan + verification
-│   ├── plan.md                           # Execution plan
-│   └── verify.md                         # Verification report
-└── _archive/                              # Completed requirements
+{OutputDir}/                              # 默认: docs/requirements/
+├── requirements-index.md                  # 所有需求的主索引
+├── active-requirements.md                 # 当前工作追踪器
+├── req-{timestamp}-{slug}/               # 需求目录
+│   ├── index.md                          # 摘要 + 进度（入口点）
+│   ├── functional.md                     # 功能需求 (FR-*)
+│   ├── non-functional.md                 # 非功能需求 (NFR-*)
+│   ├── technical.md                      # 技术方案 + 约束
+│   ├── test-strategy.md                  # 测试计划 + 验证
+│   ├── plan.md                           # 执行计划
+│   └── verify.md                         # 验证报告
+└── _archive/                              # 已完成的需求
     └── req-{timestamp}-{slug}/
-        └── _archived-at.md               # Archive metadata
+        └── _archived-at.md               # 归档元数据
 ```
 
-### Why Progressive Disclosure?
+### 为什么使用渐进式披露？
 
-| Problem | Solution |
+| 问题 | 解决方案 |
 |---------|----------|
-| Large monolithic docs overwhelm AI | Split into focused sub-documents |
-| Context window exhaustion | Load only needed sections |
-| Hard to find specific info | Index + sub-doc structure |
-| Update conflicts | Granular file updates |
+| 大型单一文档让 AI 不知所措 | 拆分为聚焦的子文档 |
+| 上下文窗口耗尽 | 仅加载所需部分 |
+| 难以查找特定信息 | 索引 + 子文档结构 |
+| 更新冲突 | 细粒度文件更新 |
 
-### File Naming Conventions
+### 文件命名约定
 
-- **Directory**: `req-{timestamp}-{slug}/`
-- **Timestamp**: `yyyyMMdd-HHmmss` (e.g., `20260314-143025`)
-- **Slug**: Lowercase, hyphen-separated, max 50 chars from title
+- **目录**: `req-{timestamp}-{slug}/`
+- **时间戳**: `yyyyMMdd-HHmmss` (例如, `20260314-143025`)
+- **Slug**: 小写，连字符分隔，从标题提取最多 50 个字符
 
-### Document Templates
+### 文档模板
 
 #### requirements-index.md
 
-Master index with tables for:
-- **Active Requirements**: ID, Title, Status, Priority, Phase, Created, Summary
-- **Pending Requirements**: ID, Title, Priority, Dependencies, Created
-- **Completed (Last 10)**: ID, Title, Completed, Summary, Archive link
+主索引包含以下表格：
+- **活动需求**: ID、标题、状态、优先级、阶段、创建时间、摘要
+- **待处理需求**: ID、标题、优先级、依赖项、创建时间
+- **已完成（最近 10 个）**: ID、标题、完成时间、摘要、归档链接
 
 #### active-requirements.md
 
-Tracker with sections for:
-- **Currently In Progress**: Priority, ID, Title, Phase, Started, Blocking
-- **Up Next**: Priority, ID, Title, Dependencies
-- **Blocked**: ID, Title, Blocked By, Reason
+追踪器包含以下部分：
+- **当前进行中**: 优先级、ID、标题、阶段、开始时间、阻塞项
+- **接下来**: 优先级、ID、标题、依赖项
+- **已阻塞**: ID、标题、被谁阻塞、原因
 
 #### req-{timestamp}-{slug}/index.md
 
-YAML frontmatter: `id`, `title`, `status`, `priority`, `created`, `updated`, `source`, `related`, `affected_components`
+YAML 前置元数据：`id`、`title`、`status`、`priority`、`created`、`updated`、`source`、`related`、`affected_components`
 
-Sections: Quick Summary, Document Structure (table with links), Context, Progress (table by phase), Supplement History
+章节：快速摘要、文档结构（带链接的表格）、上下文、进度（按阶段的表格）、补充历史
 
 #### req-{timestamp}-{slug}/functional.md
 
-Each requirement (FR-*):
-- **Priority**: High | Medium | Low
-- **Status**: Draft | Approved | Implemented | Verified
-- **Description**: What the system must do
-- **Acceptance Criteria**: AC-* checklist items
-- **Notes**: Additional context
+每个需求 (FR-*)：
+- **优先级**: High | Medium | Low
+- **状态**: Draft | Approved | Implemented | Verified
+- **描述**: 系统必须做什么
+- **验收标准**: AC-* 检查项
+- **备注**: 额外上下文
 
 #### req-{timestamp}-{slug}/technical.md
 
-Sections:
-- **Recommended Approach**: Primary implementation strategy with rationale
-- **Architecture Impact**: Components affected, new dependencies, breaking changes
-- **Constraints**: Type, Constraint, Rationale table
-- **Alternatives Considered**: Approach, Pros, Cons, Why Rejected table
-- **Implementation Notes**: Technical details, patterns to follow
+章节：
+- **推荐方案**: 主要实现策略及理由
+- **架构影响**: 受影响的组件、新依赖项、破坏性变更
+- **约束**: 类型、约束、理由表格
+- **考虑过的替代方案**: 方案、优点、缺点、为何拒绝表格
+- **实现备注**: 技术细节、需遵循的模式
 
 #### req-{timestamp}-{slug}/test-strategy.md
 
-Tables for:
-- **Unit Tests**: Test ID, Target, Description, Expected Result
-- **Integration Tests**: Test ID, Components, Description, Expected Result
-- **Manual Verification**: Step, Action, Expected Result
-- **Test Coverage Goals**: Unit/Integration percentages
+表格包含：
+- **单元测试**: 测试 ID、目标、描述、预期结果
+- **集成测试**: 测试 ID、组件、描述、预期结果
+- **手动验证**: 步骤、操作、预期结果
+- **测试覆盖率目标**: 单元/集成百分比
 
 #### req-{timestamp}-{slug}/plan.md
 
-- **Created**: datetime, **Status**: Draft/Approved/In Progress/Completed
-- **Task Breakdown**: Phases with tables (Task ID, Description, Dependencies, Complexity, Status)
-- **Verification Checkpoints**: Checklist items
-- **Risk Assessment**: Risk, Likelihood, Impact, Mitigation table
-- **Approval**: User checkbox and date
+- **创建时间**: datetime, **状态**: Draft/Approved/In Progress/Completed
+- **任务分解**: 阶段及表格（任务 ID、描述、依赖项、复杂度、状态）
+- **验证检查点**: 检查项
+- **风险评估**: 风险、可能性、影响、缓解措施表格
+- **审批**: 用户复选框和日期
 
 #### req-{timestamp}-{slug}/verify.md
 
-- **Verified**: datetime, **Status**: Pass | Fail | Partial
-- **Acceptance Criteria Results**: Criteria, Status, Evidence table
-- **Test Results**: Test ID, Status, Notes table
-- **Issues Found**: Issue, Severity, Resolution table
-- **Conclusion**: Checkboxes + Verdict (PASS/FAIL)
+- **验证时间**: datetime, **状态**: Pass | Fail | Partial
+- **验收标准结果**: 标准、状态、证据表格
+- **测试结果**: 测试 ID、状态、备注表格
+- **发现的问题**: 问题、严重程度、解决方案表格
+- **结论**: 复选框 + 结论 (PASS/FAIL)
 
 #### _archive/req-{timestamp}-{slug}/_archived-at.md
 
-YAML frontmatter: `original_id`, `title`, `archived_at`, `completion_status`
+YAML 前置元数据：`original_id`、`title`、`archived_at`、`completion_status`
 
-Sections: Archive Record (Original Requirement link, Archived date, Duration), Completion Summary, Key Artifacts, Lessons Learned
+章节：归档记录（原始需求链接、归档日期、持续时间）、完成摘要、关键产物、经验教训
 
 ---
 
-## IMPLEMENTATION INSTRUCTIONS
+## 实现说明
 
-### Phase 1: Discovery
+### 阶段 1: 发现
 
-**Step 1.1: Check Requirements Directory State**
+**步骤 1.1: 检查需求目录状态**
 
-- If empty or doesn't exist → STATE="empty"
-- If contains `req-*` directories → STATE="populated"
+- 如果为空或不存在 → STATE="empty"
+- 如果包含 `req-*` 目录 → STATE="populated"
 
-**Step 1.2: Context-Based Generation (When Empty)**
+**步骤 1.2: 基于上下文的生成（当为空时）**
 
-Generate initial requirements from:
+从以下来源生成初始需求：
 
-1. **Session Context**: Current conversation, implicit requirements, user question patterns
-2. **Planned Tasks**: TODOs in code (`// TODO:`, `// FIXME:`, `// HACK:`), task tracking files
-3. **Code Analysis**: Incomplete implementations, placeholders, architectural gaps
+1. **会话上下文**: 当前对话、隐含需求、用户提问模式
+2. **计划任务**: 代码中的 TODOs (`// TODO:`, `// FIXME:`, `// HACK:`)、任务追踪文件
+3. **代码分析**: 不完整的实现、占位符、架构缺口
 
-**Step 1.3: Supplement vs Independent Decision (When Populated)**
+**步骤 1.3: 补充 vs 独立决策（当已填充时）**
 
 ```
-DECISION LOGIC:
-1. Scan all existing requirement index.md files
-2. For each: Extract title, affected_components, functional requirements
-3. Calculate similarity score (0.0-1.0):
-   - Keyword overlap: 40% weight (Jaccard similarity)
-   - Component overlap: 30% weight (intersection/union)
-   - Semantic similarity: 30% weight (related concepts)
-4. If highest_similarity >= 0.70 → SUPPLEMENT existing
-5. Else → CREATE independent
+决策逻辑:
+1. 扫描所有现有需求的 index.md 文件
+2. 对每个需求: 提取标题、affected_components、功能需求
+3. 计算相似度分数 (0.0-1.0):
+   - 关键词重叠: 40% 权重 (Jaccard 相似度)
+   - 组件重叠: 30% 权重 (交集/并集)
+   - 语义相似度: 30% 权重 (相关概念)
+4. 如果最高相似度 >= 0.70 → 补充现有需求
+5. 否则 → 创建独立需求
 ```
 
-**Step 1.4: Ask Clarifying Questions**
+**步骤 1.4: 提出澄清问题**
 
-Ask questions ONLY when:
-- Multiple valid interpretations with different implementations
-- Critical technical decisions have no clear path
-- Scope ambiguity could lead to 2x+ effort difference
-- Supplement vs independent decision is borderline (0.65-0.75 similarity)
+仅在以下情况下提问：
+- 存在多种有效解释，且实现方式不同
+- 关键技术决策没有明确路径
+- 范围模糊可能导致 2 倍以上的工作量差异
+- 补充 vs 独立决策处于临界状态（0.65-0.75 相似度）
 
-**MUST DO:**
-- Parse requirement text for functionality, dependencies, components
-- Explore codebase for architecture, patterns, file structure
-- Reference historical requirements in HistoryDir
-- Determine supplement vs independent before documentation
+**必须做:**
+- 解析需求文本以提取功能、依赖项、组件
+- 探索代码库以了解架构、模式、文件结构
+- 参考 HistoryDir 中的历史需求
+- 在文档化之前确定是补充还是独立
 
-**MUST NOT DO:**
-- Start implementation before documentation is complete
-- Assume requirements without evidence
-- Create new requirement without checking similarity
-- Skip exploration of existing patterns
+**绝不能做:**
+- 在文档完成之前开始实现
+- 没有证据就假设需求
+- 未检查相似度就创建新需求
+- 跳过对现有模式的探索
 
-### Phase 2: Documentation
+### 阶段 2: 文档化
 
-**Step 2.1: Create Directory Structure**
+**步骤 2.1: 创建目录结构**
 
-For NEW requirement:
+对于新需求：
 ```
 {OutputDir}/req-{timestamp}-{slug}/
 ├── index.md
 ├── functional.md
-├── non-functional.md (if needed)
+├── non-functional.md (如需要)
 ├── technical.md
 └── test-strategy.md
 ```
 
-For SUPPLEMENT:
+对于补充：
 ```
 {OutputDir}/req-{existing-timestamp}-{existing-slug}/
-├── index.md (UPDATE Progress + Supplement History)
-├── functional.md (APPEND new FR-*)
-├── non-functional.md (APPEND new NFR-* if needed)
-├── technical.md (UPDATE if approach changes)
-└── test-strategy.md (UPDATE test plan)
+├── index.md (更新进度 + 补充历史)
+├── functional.md (追加新 FR-*)
+├── non-functional.md (如需要追加新 NFR-*)
+├── technical.md (如方案变更则更新)
+└── test-strategy.md (更新测试计划)
 ```
 
-**Step 2.2: Generate Documents**
+**步骤 2.2: 生成文档**
 
-| Document | Required | Generated From |
+| 文档 | 必需 | 生成来源 |
 |----------|----------|----------------|
-| index.md | ✅ | Title, summary, context, related requirements |
-| functional.md | ✅ | User requirements → FR-* items with acceptance criteria |
-| non-functional.md | ⚪ | Performance, security, usability requirements |
-| technical.md | ✅ | Architecture analysis, constraints, approach |
-| test-strategy.md | ✅ | Functional requirements → test cases |
+| index.md | ✅ | 标题、摘要、上下文、相关需求 |
+| functional.md | ✅ | 用户需求 → 带验收标准的 FR-* 项 |
+| non-functional.md | ⚪ | 性能、安全、可用性需求 |
+| technical.md | ✅ | 架构分析、约束、方案 |
+| test-strategy.md | ✅ | 功能需求 → 测试用例 |
 
-**Step 2.3: Update Index Files**
+**步骤 2.3: 更新索引文件**
 
-1. Create/update `requirements-index.md`: Add to "Active Requirements" (new) or update status/phase (supplement)
-2. Create/update `active-requirements.md`: Add to "Currently In Progress" (immediate), "Up Next" (pending), or "Blocked" (has dependencies)
+1. 创建/更新 `requirements-index.md`: 添加到"活动需求"（新建）或更新状态/阶段（补充）
+2. 创建/更新 `active-requirements.md`: 添加到"当前进行中"（立即）、"接下来"（待处理）或"已阻塞"（有依赖项）
 
-**Step 2.4: Update Supplement History (When Supplementing)**
+**步骤 2.4: 更新补充历史（补充时）**
 
-Add entry to `index.md` Supplement History table: `| {datetime} | Supplemented | Added FR-003: {description} |`
+在 `index.md` 补充历史表格中添加条目：`| {datetime} | Supplemented | Added FR-003: {description} |`
 
-**MUST DO:**
-- Create directory structure for each independent requirement
-- Generate all required sub-documents
-- Update requirements-index.md on every new/updated requirement
-- Update active-requirements.md on status changes
-- Add supplement history entries when updating existing
+**必须做:**
+- 为每个独立需求创建目录结构
+- 生成所有必需的子文档
+- 每次新建/更新需求时更新 requirements-index.md
+- 状态变更时更新 active-requirements.md
+- 更新现有需求时添加补充历史条目
 
-**MUST NOT DO:**
-- Create single monolithic requirement document
-- Skip index updates after requirement creation/update
-- Exceed 50 characters in slug
-- Delete archived requirements
+**绝不能做:**
+- 创建单一的大型需求文档
+- 创建/更新需求后跳过索引更新
+- slug 超过 50 个字符
+- 删除已归档的需求
 
-### Phase 3: Planning
+### 阶段 3: 规划
 
-**Step 3.1: Generate Execution Plan**
+**步骤 3.1: 生成执行计划**
 
-Create `plan.md` inside requirement directory:
+在需求目录内创建 `plan.md`：
 
-1. **Break down into atomic tasks**: Clear input, output, success criteria; identify dependencies; mark parallel tasks
-2. **Present plan to user**: Display numbered task list with dependencies; show estimated complexity; highlight decisions needing input
+1. **分解为原子任务**: 明确输入、输出、成功标准；识别依赖项；标记可并行的任务
+2. **向用户展示计划**: 显示带依赖项的编号任务列表；显示预估复杂度；突出需要输入的决策
 
-**Step 3.2: User Confirmation**
+**步骤 3.2: 用户确认**
 
-- Ask user to confirm the plan or request modifications
-- Proceed only after explicit approval
-- Update `plan.md` approval section on confirmation
+- 请用户确认计划或请求修改
+- 仅在明确批准后继续
+- 确认后更新 `plan.md` 审批部分
 
-**Step 3.3: Update Tracker**
+**步骤 3.3: 更新追踪器**
 
-Update `active-requirements.md` with current phase and task progress.
+用当前阶段和任务进度更新 `active-requirements.md`。
 
-**MUST DO:**
-- Create plan inside requirement directory
-- Include test tasks when implementation is involved
-- Get explicit user approval before execution
+**必须做:**
+- 在需求目录内创建计划
+- 涉及实现时包含测试任务
+- 执行前获得用户明确批准
 
-**MUST NOT DO:**
-- Skip user plan approval
-- Omit testing from plan
+**绝不能做:**
+- 跳过用户计划审批
+- 从计划中省略测试
 
-### Phase 4: Execution
+### 阶段 4: 执行
 
-**Step 4.1: Execute Tasks**
+**步骤 4.1: 执行任务**
 
-Execute tasks in dependency order; run parallel tasks simultaneously where possible.
+按依赖顺序执行任务；尽可能同时运行并行任务。
 
-**Step 4.2: Track Progress**
+**步骤 4.2: 追踪进度**
 
-After each task:
-- Verify against task acceptance criteria
-- Update `index.md` Progress table
-- Update `active-requirements.md` status
-- Update requirements document if discoveries require changes
+每个任务完成后：
+- 根据任务验收标准验证
+- 更新 `index.md` 进度表格
+- 更新 `active-requirements.md` 状态
+- 如发现需要变更则更新需求文档
 
-**Step 4.3: Handle Discrepancies**
+**步骤 4.3: 处理差异**
 
-- Compare implementation outputs against requirements document
-- Add discrepancies to `plan.md` as new tasks if needed
-- Document changes in `index.md` Supplement History
+- 将实现输出与需求文档进行比较
+- 如有需要将差异作为新任务添加到 `plan.md`
+- 在 `index.md` 补充历史中记录变更
 
-**MUST DO:**
-- Update `index.md` Progress table after each phase
-- Update `active-requirements.md` on status changes
-- Document any requirement changes
+**必须做:**
+- 每个阶段后更新 `index.md` 进度表格
+- 状态变更时更新 `active-requirements.md`
+- 记录任何需求变更
 
-**MUST NOT DO:**
-- Skip verification after task completion
-- Proceed to next phase if current phase verification fails
-- Modify requirements without documenting the change
+**绝不能做:**
+- 任务完成后跳过验证
+- 当前阶段验证失败就进入下一阶段
+- 未经记录就修改需求
 
-### Phase 5: Validation & Archive
+### 阶段 5: 验证与归档
 
-**Step 5.1: Run Tests**
+**步骤 5.1: 运行测试**
 
-Execute all tests defined in `test-strategy.md`: unit tests, integration tests, manual verification steps.
+执行 `test-strategy.md` 中定义的所有测试：单元测试、集成测试、手动验证步骤。
 
-**Step 5.2: Generate Verification Report**
+**步骤 5.2: 生成验证报告**
 
-Create `verify.md` with: acceptance criteria results, test results, issues found (if any), final verdict (PASS/FAIL).
+创建包含以下内容的 `verify.md`：验收标准结果、测试结果、发现的问题（如有）、最终结论 (PASS/FAIL)。
 
-**Step 5.3: Archive Process (When PASS)**
+**步骤 5.3: 归档流程（当 PASS 时）**
 
-1. **Create archive directory**: `{OutputDir}/_archive/req-{timestamp}-{slug}/`
-2. **Move all documents**: Preserve original directory name, move all sub-documents
-3. **Create archive metadata**: Create `_archived-at.md` with completion info
-4. **Update requirements-index.md**: Move from "Active" to "Completed (Last 10)"; if >10 completed, remove oldest
-5. **Update active-requirements.md**: Remove from "Currently In Progress"; update dependent requirements status
+1. **创建归档目录**: `{OutputDir}/_archive/req-{timestamp}-{slug}/`
+2. **移动所有文档**: 保留原始目录名，移动所有子文档
+3. **创建归档元数据**: 创建包含完成信息的 `_archived-at.md`
+4. **更新 requirements-index.md**: 从"活动"移至"已完成（最近 10 个）"；如已完成超过 10 个，移除最旧的
+5. **更新 active-requirements.md**: 从"当前进行中"移除；更新依赖需求的状态
 
-**Archive Naming Convention**: Preserve original `req-{original-timestamp}-{original-slug}/` name for traceability, searchability, and link consistency.
+**归档命名约定**: 保留原始 `req-{original-timestamp}-{original-slug}/` 名称以实现可追溯性、可搜索性和链接一致性。
 
-**MUST DO:**
-- Generate verification report before archive
-- Move to `_archive/` with original name preserved
-- Create `_archived-at.md` metadata
-- Update index (move Active → Completed, keep last 10)
-- Update tracker (remove from In Progress)
+**必须做:**
+- 归档前生成验证报告
+- 保留原始名称移动到 `_archive/`
+- 创建 `_archived-at.md` 元数据
+- 更新索引（活动 → 已完成，保留最近 10 个）
+- 更新追踪器（从进行中移除）
 
-**MUST NOT DO:**
-- Archive requirement with unverified acceptance criteria
-- Delete archived requirements
-- Remove completed requirements from index (keep last 10)
+**绝不能做:**
+- 归档未经验收标准验证的需求
+- 删除已归档的需求
+- 从索引中移除已完成的需求（保留最近 10 个）
 
 ---
 
-## TOOLS
+## 工具
 
-| Tool | Purpose |
+| 工具 | 用途 |
 |------|---------|
-| `read` | Read existing files, requirements, code |
-| `write` | Create requirements documents, plans, reports |
-| `glob` | Find req-* directories, pattern matching |
-| `grep` | Search for TODOs, patterns, implementations |
-| `bash` | Directory operations, file moves, archiving |
-| `question` | Ask clarifying questions when ambiguity exists |
-| `task` with `explore` | Deep codebase exploration |
-| `task` with `librarian` | Research external dependencies/patterns |
-| `lsp_diagnostics` | Verify code quality after changes |
+| `read` | 读取现有文件、需求、代码 |
+| `write` | 创建需求文档、计划、报告 |
+| `glob` | 查找 req-* 目录、模式匹配 |
+| `grep` | 搜索 TODOs、模式、实现 |
+| `bash` | 目录操作、文件移动、归档 |
+| `question` | 存在歧义时提出澄清问题 |
+| `task` with `explore` | 深度代码库探索 |
+| `task` with `librarian` | 研究外部依赖/模式 |
+| `lsp_diagnostics` | 变更后验证代码质量 |
 
 ---
 
-## IMPLEMENTATION PRIORITY
+## 实现优先级
 
-### MUST Rules
+### 必须规则
 
-1. Immediately start discovery phase
-2. Create directory structure for each independent requirement
-3. Generate progressive disclosure structure (index + sub-docs)
-4. Check similarity before creating new requirement (70% threshold)
-5. Supplement existing requirement if semantically related
-6. Generate requirements document before planning
-7. Update requirements-index.md on every new/updated requirement
-8. Update active-requirements.md on status changes
-9. Create detailed plan with user confirmation
-10. Include testing in plan when implementation is involved
-11. Archive completed requirements to _archive/ with metadata
-12. Keep last 10 completed requirements in index
-13. Analyze session context when requirements directory is empty
-14. Verify outputs against requirements document
-15. Ask clarifying questions only when genuinely ambiguous
+1. 立即开始发现阶段
+2. 为每个独立需求创建目录结构
+3. 生成渐进式披露结构（索引 + 子文档）
+4. 创建新需求前检查相似度（70% 阈值）
+5. 如果语义相关则补充现有需求
+6. 规划前生成需求文档
+7. 每次新建/更新需求时更新 requirements-index.md
+8. 状态变更时更新 active-requirements.md
+9. 创建详细计划并获得用户确认
+10. 涉及实现时在计划中包含测试
+11. 将已完成的需求归档到 _archive/ 并附带元数据
+12. 在索引中保留最近 10 个已完成的需求
+13. 当需求目录为空时分析会话上下文
+14. 根据需求文档验证输出
+15. 仅在真正模糊时提出澄清问题
 
-### NEVER Rules
+### 绝不能规则
 
-1. Create single monolithic requirement document
-2. Create new requirement without checking for supplements
-3. Skip index update after requirement creation/update
-4. Skip tracker update after status change
-5. Start implementation without requirements document
-6. Skip user plan approval
-7. Omit testing from plan
-8. Archive requirement with unverified acceptance criteria
-9. Delete archived requirements
-10. Exceed 50 characters in slug
-11. Remove completed requirements from index (keep last 10)
-12. Declare complete without verification report
-13. Reduce scope without explicit user approval
+1. 创建单一的大型需求文档
+2. 未检查补充就创建新需求
+3. 创建/更新需求后跳过索引更新
+4. 状态变更后跳过追踪器更新
+5. 没有需求文档就开始实现
+6. 跳过用户计划审批
+7. 从计划中省略测试
+8. 归档未经验收标准验证的需求
+9. 删除已归档的需求
+10. slug 超过 50 个字符
+11. 从索引中移除已完成的需求（保留最近 10 个）
+12. 没有验证报告就声明完成
+13. 未经用户明确批准就缩减范围
 
 ---
 
-## OUTPUT FILES
+## 输出文件
 
-### Index Files (At OutputDir Root)
+### 索引文件（在 OutputDir 根目录）
 
-| File | Purpose | Updated |
+| 文件 | 用途 | 更新时机 |
 |------|---------|---------|
-| `requirements-index.md` | Master index of all requirements | Every requirement change |
-| `active-requirements.md` | Current work tracker | Every status change |
+| `requirements-index.md` | 所有需求的主索引 | 每次需求变更 |
+| `active-requirements.md` | 当前工作追踪器 | 每次状态变更 |
 
-### Requirement Directory Structure
+### 需求目录结构
 
-| File | Required | Description |
+| 文件 | 必需 | 描述 |
 |------|----------|-------------|
-| `index.md` | ✅ | Summary + progress (entry point) |
-| `functional.md` | ✅ | Functional requirements (FR-*) |
-| `non-functional.md` | ⚪ | Non-functional requirements (NFR-*) |
-| `technical.md` | ✅ | Technical approach + constraints |
-| `test-strategy.md` | ✅ | Test plan + verification |
-| `plan.md` | Generated | Execution plan (Phase 3) |
-| `verify.md` | Generated | Verification report (Phase 5) |
+| `index.md` | ✅ | 摘要 + 进度（入口点） |
+| `functional.md` | ✅ | 功能需求 (FR-*) |
+| `non-functional.md` | ⚪ | 非功能需求 (NFR-*) |
+| `technical.md` | ✅ | 技术方案 + 约束 |
+| `test-strategy.md` | ✅ | 测试计划 + 验证 |
+| `plan.md` | 生成 | 执行计划（阶段 3） |
+| `verify.md` | 生成 | 验证报告（阶段 5） |
 
-### Archive Structure
+### 归档结构
 
-| File | Description |
+| 文件 | 描述 |
 |------|-------------|
-| `_archive/req-{timestamp}-{slug}/` | Archived requirement |
-| `_archived-at.md` | Archive metadata |
+| `_archive/req-{timestamp}-{slug}/` | 已归档需求 |
+| `_archived-at.md` | 归档元数据 |
 
-**Formats**: Timestamp `yyyyMMdd-HHmmss`; Slug lowercase, hyphen-separated, max 50 chars
+**格式**: 时间戳 `yyyyMMdd-HHmmss`; Slug 小写，连字符分隔，最多 50 个字符
 
 ---
 
-## EXAMPLES
+## 示例
 
-### Example 1: First Requirement (Empty Directory)
+### 示例 1: 第一个需求（空目录）
 
 ```bash
 /req-driven-dev "Add dark mode toggle to settings page"
 ```
 
-**Discovery**: Directory empty → Analyze session context → Create new independent requirement
+**发现**: 目录为空 → 分析会话上下文 → 创建新的独立需求
 
-**Generated**: `requirements-index.md`, `active-requirements.md`, `req-20260314-143025-add-dark-mode-toggle-settings-page/` with all sub-documents
+**生成**: `requirements-index.md`、`active-requirements.md`、`req-20260314-143025-add-dark-mode-toggle-settings-page/` 及所有子文档
 
-**Index**: Added to "Active Requirements" table
+**索引**: 添加到"活动需求"表格
 
-### Example 2: Supplement Existing Requirement
+### 示例 2: 补充现有需求
 
 ```bash
 /req-driven-dev "Add system preference auto-detection for dark mode"
 ```
 
-**Discovery**: Similarity score 0.82 with existing dark mode requirement → SUPPLEMENT
+**发现**: 与现有暗色模式需求的相似度分数为 0.82 → 补充
 
-**Updates**: Append FR-003 to `functional.md`, update `technical.md` with matchMedia approach, add test to `test-strategy.md`, update Supplement History
+**更新**: 在 `functional.md` 追加 FR-003，用 matchMedia 方案更新 `technical.md`，在 `test-strategy.md` 添加测试，更新补充历史
 
-**Index**: Status updated to "In Progress - Supplemented"
+**索引**: 状态更新为"In Progress - Supplemented"
 
-### Example 3: Independent Requirement
+### 示例 3: 独立需求
 
 ```bash
 /req-driven-dev "Implement payment integration with Stripe"
 ```
 
-**Discovery**: No similar requirements → CREATE independent
+**发现**: 没有相似需求 → 创建独立需求
 
-**Generated**: New `req-20260315-100000-payment-integration-stripe/` with all sub-documents
+**生成**: 新建 `req-20260315-100000-payment-integration-stripe/` 及所有子文档
 
-**Index**: Added to "Pending Requirements" (dependency on auth completion)
+**索引**: 添加到"待处理需求"（依赖认证完成）
 
-### Example 4: Complete and Archive
+### 示例 4: 完成并归档
 
 ```bash
 /req-driven-dev --complete REQ-20260314-143025
 ```
 
-**Process**:
-1. Verify all acceptance criteria met
-2. Generate final `verify.md` with PASS verdict
-3. Move to `_archive/req-20260314-143025-add-dark-mode-toggle-settings-page/`
-4. Create `_archived-at.md`
-5. Update index: Active → Completed (last 10)
-6. Update tracker: Remove from In Progress
+**流程**:
+1. 验证所有验收标准已满足
+2. 生成带有 PASS 结论的最终 `verify.md`
+3. 移动到 `_archive/req-20260314-143025-add-dark-mode-toggle-settings-page/`
+4. 创建 `_archived-at.md`
+5. 更新索引: 活动 → 已完成（最近 10 个）
+6. 更新追踪器: 从进行中移除
 
 ---
 
