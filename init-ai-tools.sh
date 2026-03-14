@@ -71,17 +71,44 @@ install_language_server() {
     fi
 }
 
+check_ca_certificates_installed() {
+    local os_type="$1"
+    
+    case "$os_type" in
+        macos)
+            if command -v brew &> /dev/null && brew list ca-certificates &> /dev/null; then
+                return 0
+            fi
+            ;;
+        linux)
+            if command -v dpkg &> /dev/null && dpkg -l ca-certificates &> /dev/null 2>&1; then
+                return 0
+            elif command -v rpm &> /dev/null && rpm -q ca-certificates &> /dev/null 2>&1; then
+                return 0
+            elif [ -f /etc/ssl/certs/ca-certificates.crt ] || [ -f /etc/pki/tls/certs/ca-bundle.crt ]; then
+                return 0
+            fi
+            ;;
+    esac
+    return 1
+}
+
 # Install ca-certificates based on OS
 install_ca_certificates() {
     local os_type
     os_type=$(detect_os)
+    
+    if check_ca_certificates_installed "$os_type"; then
+        info_msg "ca-certificates already installed, skipping"
+        return 0
+    fi
     
     info_msg "Installing ca-certificates for SSL verification..."
     
     case "$os_type" in
         macos)
             if command -v brew &> /dev/null; then
-                brew install ca-certificates 2>&1 || warning_msg "ca-certificates may already be installed"
+                brew install ca-certificates 2>&1 || warning_msg "ca-certificates installation failed"
                 # Set environment variables for SSL
                 if [ -f "$(brew --prefix)/etc/ca-certificates/cert.pem" ]; then
                     export SSL_CERT_FILE="$(brew --prefix)/etc/ca-certificates/cert.pem"
@@ -96,7 +123,7 @@ install_ca_certificates() {
             ;;
         linux)
             if command -v apt-get &> /dev/null; then
-                apt-get update && apt-get install -y ca-certificates 2>&1 || warning_msg "ca-certificates installation failed or already installed"
+                apt-get update && apt-get install -y ca-certificates 2>&1 || warning_msg "ca-certificates installation failed"
             elif command -v apk &> /dev/null; then
                 apk add --no-cache ca-certificates 2>&1 && update-ca-certificates 2>&1 || warning_msg "ca-certificates installation failed"
             elif command -v dnf &> /dev/null; then
