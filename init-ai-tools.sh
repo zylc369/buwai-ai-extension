@@ -210,12 +210,20 @@ install_ca_certificates() {
 install_basedpyright() {
     info_msg "Installing basedpyright (Python language server)..."
     
-    # Upgrade certifi first to ensure SSL works
+    if npm install -g "basedpyright" 2>&1; then
+        success_msg "basedpyright installed successfully via npm"
+        return 0
+    fi
+    
+    if ! command -v pip3 &> /dev/null; then
+        warning_msg "pip3 not available, cannot install basedpyright"
+        return 1
+    fi
+    
     pip3 install --upgrade certifi 2>&1 || warning_msg "Failed to upgrade certifi"
     
-    # Attempt installation
     if pip3 install "basedpyright"; then
-        success_msg "basedpyright installed successfully"
+        success_msg "basedpyright installed successfully via pip3"
         return 0
     else
         warning_msg "Failed to install basedpyright"
