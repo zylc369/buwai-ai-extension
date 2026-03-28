@@ -13,7 +13,7 @@
       "variant": "high"
     },
     "librarian": {
-      "model": "zai-coding-plan/glm-4.7-flashx"
+      "model": "zai-coding-plan/glm-4.7"
     },
     "explore": {
       "model": "zai-coding-plan/glm-4.7-flashx"
@@ -39,6 +39,9 @@
     "hephaestus": {
       "model": "zai-coding-plan/glm-4.7",
       "variant": "medium"
+    },
+    "sisyphus-junior": {
+      "model": "zai-coding-plan/glm-4.7"
     }
   },
   "categories": {

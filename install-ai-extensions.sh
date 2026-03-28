@@ -11,6 +11,7 @@ NC='\033[0m'
 # Configuration
 CURRENT_DIR="$(pwd)"
 SOURCE_EXTENSIONS_DIR="$CURRENT_DIR/extensions"
+SOURCE_CONFIG_FILE="$CURRENT_DIR/config/oh-my-opencode.json"
 DEFAULT_EXTENSION_ID="buwai-ai-extension"
 
 # OpenCode installation directories
@@ -215,6 +216,47 @@ copy_extension_files() {
     echo "$copied_files"
 }
 
+backup_config_file() {
+    local opencode_dir="$1"
+    local config_file="$opencode_dir/oh-my-opencode.json"
+    
+    if [ ! -f "$config_file" ]; then
+        return 0
+    fi
+    
+    local max_num=0
+    
+    for backup_file in "$opencode_dir"/oh-my-opencode.json.bak.*; do
+        if [ -f "$backup_file" ]; then
+            local filename=$(basename "$backup_file")
+            local num="${filename##*\.bak\.}"
+            if [[ "$num" =~ ^[0-9]+$ ]] && [ "$num" -gt "$max_num" ]; then
+                max_num="$num"
+            fi
+        fi
+    done
+    
+    local next_num=$((max_num + 1))
+    local backup_path="${config_file}.bak.${next_num}"
+    
+    cp "$config_file" "$backup_path"
+    warning_msg "Backed up existing config to: oh-my-opencode.json.bak.${next_num}"
+}
+
+install_config_file() {
+    local opencode_dir="$1"
+    
+    if [ ! -f "$SOURCE_CONFIG_FILE" ]; then
+        info_msg "Config file not found: $SOURCE_CONFIG_FILE"
+        return 0
+    fi
+    
+    backup_config_file "$opencode_dir"
+    
+    cp "$SOURCE_CONFIG_FILE" "$opencode_dir/oh-my-opencode.json"
+    success_msg "Installed config file: oh-my-opencode.json"
+}
+
 # Run AI tools initialization script
 run_ai_tools_init() {
     local script_path="$CURRENT_DIR/init-ai-tools.sh"
@@ -245,6 +287,7 @@ display_install_summary() {
     local opencode_dir="$2"
     local file_count="$3"
     local copied_count="$4"
+    local config_installed="$5"
 
     echo ""
     echo "========================================"
@@ -256,6 +299,7 @@ display_install_summary() {
     echo "  Source: $SOURCE_EXTENSIONS_DIR"
     echo "  Installed to: $opencode_dir"
     echo "  Files copied: $copied_count"
+    echo "  Config installed: $config_installed"
     echo ""
     echo "To uninstall this extension, run:"
     echo "  ./uninstall.sh"
@@ -313,7 +357,7 @@ main() {
 
     if [ "$verify_only" = true ]; then
         info_msg "Verify-only mode: extension not installed"
-        display_install_summary "$extension_id" "<not installed>" "0" "0"
+        display_install_summary "$extension_id" "<not installed>" "0" "0" "no"
         return 0
     fi
 
@@ -334,11 +378,18 @@ main() {
     local copied_count
     copied_count=$(copy_extension_files "$opencode_dir" "$extension_id")
 
+    # Install config file
+    local config_status="no"
+    if [ -f "$SOURCE_CONFIG_FILE" ]; then
+        install_config_file "$opencode_dir"
+        config_status="yes"
+    fi
+
     # Run AI tools initialization
     run_ai_tools_init
 
     # Display summary
-    display_install_summary "$extension_id" "$opencode_dir" "$copied_count" "$copied_count"
+    display_install_summary "$extension_id" "$opencode_dir" "$copied_count" "$copied_count" "$config_status"
 }
 
 main "$@"

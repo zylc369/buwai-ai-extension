@@ -47,11 +47,76 @@ check_npm() {
     success_msg "npm is available"
 }
 
-# Check if pip3 is available
+install_pip3() {
+    local os_type="$1"
+    
+    case "$os_type" in
+        linux)
+            if command -v apt-get &> /dev/null; then
+                info_msg "Installing pip3 via apt..."
+                if apt-get update && apt-get install -y python3-pip; then
+                    success_msg "pip3 installed successfully"
+                    return 0
+                else
+                    warning_msg "Failed to install pip3 via apt"
+                    return 1
+                fi
+            elif command -v apk &> /dev/null; then
+                info_msg "Installing pip3 via apk..."
+                if apk add --no-cache py3-pip; then
+                    success_msg "pip3 installed successfully"
+                    return 0
+                else
+                    warning_msg "Failed to install pip3 via apk"
+                    return 1
+                fi
+            elif command -v dnf &> /dev/null; then
+                info_msg "Installing pip3 via dnf..."
+                if dnf install -y python3-pip; then
+                    success_msg "pip3 installed successfully"
+                    return 0
+                else
+                    warning_msg "Failed to install pip3 via dnf"
+                    return 1
+                fi
+            else
+                warning_msg "Unknown package manager, cannot install pip3"
+                return 1
+            fi
+            ;;
+        macos)
+            # if command -v brew &> /dev/null; then
+            #     info_msg "Installing pip3 via brew..."
+            #     if brew install python; then
+            #         success_msg "pip3 installed successfully"
+            #         return 0
+            #     else
+            #         warning_msg "Failed to install pip3 via brew"
+            #         return 1
+            #     fi
+            # else
+            #     warning_msg "Homebrew not found, cannot install pip3"
+            #     return 1
+            # fi
+            warning_msg "Can not install pip3 in macos"
+            return 1
+            ;;
+        *)
+            warning_msg "Unsupported OS for automatic pip3 installation"
+            return 1
+            ;;
+    esac
+}
+
 check_pip3() {
     if ! command -v pip3 &> /dev/null; then
-        warning_msg "pip3 is not installed. Skipping basedpyright installation."
-        return 1
+        local os_type
+        os_type=$(detect_os)
+        warning_msg "pip3 is not installed. Attempting to install..."
+        if ! install_pip3 "$os_type"; then
+            warning_msg "Failed to install pip3. Skipping basedpyright installation."
+            return 1
+        fi
     fi
     success_msg "pip3 is available"
     return 0
